@@ -90,17 +90,49 @@ void vocab_create(char *dirname)
 			++nlines;
 			get_index(word1);
 			get_index(word2);
-			/*printf("%s %u\n", word1, hash(word1));*/
 		}
+	}
+}
 
-		printf("%s %d\n", ent->d_name, nlines);
+/* read_binary_embeddings: read the file name to get binary vectors */
+void read_binary_embeddings(char *name)
+{
+	int dim;
+	int n_int, i;
+	FILE *fp;
+	unsigned long l;
+	char word[MAXLENWORD];
+
+	if ((fp = fopen(name, "r")) == NULL)
+	{
+		fprintf(stderr, "read_binary_embeddings: can't open %s\n",
+		        name);
+		exit(1);
 	}
 
+	if (fscanf(fp, "%d", &dim) <= 0)
+	{
+		fprintf(stderr, "read_binary_embeddings: can't read dimension"
+		        " of binary vectors.\n");
+		exit(1);
+	}
+
+	n_int = dim / (sizeof(long) * 8);
+	printf("%d\n", n_int);
+	while (fscanf(fp, "%s", word) > 0)
+	{
+		printf("\n%s", word);
+		for (i = 0; i < n_int; ++i)
+		{
+			fscanf(fp, "%lu", &l);
+			printf(" %lu", l);
+		}
+	}
 }
 
 int main(void)
 {
 	vocab_create(DATADIR);
-	printf("%ld\n", sizeof(struct nlist));
+	read_binary_embeddings("out.txt");
 	return 0;
 }
