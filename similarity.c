@@ -61,19 +61,18 @@ void add_word(const char *s)
 	hashtab[hashval] = np;
 }
 
-/* vocab_create: read each file in dirname, print each word in these files */
-void vocab_create(char *dirname)
+/* create_vocab: read each file in dirname to create vocab of unique words */
+void create_vocab(char *dirname)
 {
 	DIR *dp;
 	FILE *fp;
 	struct dirent *ent;
 	char filepath[MAXLENPATH], word1[MAXLENWORD], word2[MAXLENWORD];
 	float simval;
-	int nlines;
 
 	if ((dp = opendir(dirname)) == NULL)
 	{
-		fprintf(stderr, "vocab_create: can't open %s\n", dirname);
+		fprintf(stderr, "create_vocab: can't open %s\n", dirname);
 		exit(1);
 	}
 
@@ -87,17 +86,15 @@ void vocab_create(char *dirname)
 		strcat(filepath, ent->d_name);
 		if ((fp = fopen(filepath, "r")) == NULL)
 		{
-			fprintf(stderr, "vocab_create: can't open file %s\n",
+			fprintf(stderr, "create_vocab: can't open file %s\n",
 			        filepath);
 			continue;
 		}
 
-		nlines = 0;
 		while (fscanf(fp, "%s %s %f", word1, word2, &simval) > 0)
 		{
-			++nlines;
-			get_index(word1);
-			get_index(word2);
+			add_word(word1);
+			add_word(word2);
 		}
 	}
 }
