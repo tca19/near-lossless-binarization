@@ -15,7 +15,9 @@ struct nlist
 	long index;
 };
 
-static struct nlist *hashtab[HASHSIZE]; /* pointer table */
+static struct nlist *hashtab[HASHSIZE]; /* hashtab composed of linked lists */
+static long word_index = 0;             /* index of vector associated to word */
+static int n_bits = 0, n_long = 0;      /* #bits per vector, #long per array */
 
 /* hash: form hash value for string s */
 unsigned int hash(const char *s)
@@ -27,30 +29,36 @@ unsigned int hash(const char *s)
 	return hashval % HASHSIZE;
 }
 
-/* get_index: return index of string s; add it to hashtab if not present */
+/* get_index: return vector index of word s */
 long get_index(const char *s)
 {
 	struct nlist *np;
-	static long index = 0;
-	unsigned int hashval = hash(s);
 
 	/* look for string s in hashtab */
-	for (np = hashtab[hashval]; np != NULL; np = np->next)
+	for (np = hashtab[hash(s)]; np != NULL; np = np->next)
 		if (strcmp(np->word, s) == 0) /* found, return its index */
 			return np->index;
+	return -1;
+}
 
-	/* word not found, need to add it */
-	if ((np = malloc(sizeof(*np))) == NULL)
-		return -1;
-	if ((np->word = malloc(strlen(s) + 1)) == NULL)
-		return -1;
+/* add_word: add word s to hashtab (only if not present) */
+void add_word(const char *s)
+{
+	struct nlist *np;
+	unsigned int hashval = hash(s);
+
+	if (get_index(s) > -1) /* already in hashtab */
+		return;
+
+	/* word not in hashtab, need to add it */
+	if ((np = malloc(sizeof *np)) == NULL ||
+	    (np->word = malloc(strlen(s) + 1)) == NULL)
+		return;
 
 	strcpy(np->word, s);
 	np->next = hashtab[hashval];
-	np->index = index++;
+	np->index = word_index++;
 	hashtab[hashval] = np;
-
-	return np->index;
 }
 
 /* vocab_create: read each file in dirname, print each word in these files */
