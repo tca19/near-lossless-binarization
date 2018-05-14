@@ -1,10 +1,13 @@
+#include <ctype.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "spearman.c"
 
 #define DATADIR    "similarity/"
 #define HASHSIZE   10000
+#define MAXLINES   3500
 #define MAXLENPATH 64
 #define MAXLENWORD 64
 
@@ -29,7 +32,7 @@ unsigned int hash(const char *s)
 	return hashval % HASHSIZE;
 }
 
-/* get_index: return vector index of word s */
+/* get_index: return vector index of word s, -1 if not found */
 long get_index(const char *s)
 {
 	struct nlist *np;
@@ -61,6 +64,13 @@ void add_word(const char *s)
 	hashtab[hashval] = np;
 }
 
+/* lower: lowercase all char of s */
+void lower(char *s)
+{
+	for (; *s; ++s)
+		*s = tolower(*s);
+}
+
 /* create_vocab: read each file in dirname to create vocab of unique words */
 void create_vocab(char *dirname)
 {
@@ -68,7 +78,7 @@ void create_vocab(char *dirname)
 	FILE *fp;
 	struct dirent *ent;
 	char filepath[MAXLENPATH], word1[MAXLENWORD], word2[MAXLENWORD];
-	float simval;
+	float val;
 
 	if ((dp = opendir(dirname)) == NULL)
 	{
@@ -91,12 +101,17 @@ void create_vocab(char *dirname)
 			continue;
 		}
 
-		while (fscanf(fp, "%s %s %f", word1, word2, &simval) > 0)
+		while (fscanf(fp, "%s %s %f", word1, word2, &val) > 0)
 		{
+			lower(word1);
+			lower(word2);
 			add_word(word1);
 			add_word(word2);
 		}
+
+		fclose(fp);
 	}
+	closedir(dp);
 }
 
 /* load_vectors: read the vector file, only load the vectors of words present in
@@ -153,12 +168,82 @@ float binary_sim(unsigned long *v1, unsigned long *v2)
 	return n / (float) n_bits;
 }
 
+/* evaluate: compute Spearman coefficient for each file in dirname */
+void evaluate(char *dirname, unsigned long **vec)
+{
+	DIR *dp;
+	FILE *fp;
+	struct dirent *ent;
+	char filepath[MAXLENPATH], word1[MAXLENWORD], word2[MAXLENWORD];
+	float val;
+	long index1, index2, found, nlines;
+	float *simfile, *simvec;
+
+	if ((simfile = malloc(MAXLINES * sizeof *simfile)) == NULL
+	 || (simvec  = malloc(MAXLINES * sizeof *simvec))  == NULL)
+	{
+		fprintf(stderr, "evaluate: can't allocate memory to store"
+		        " similarity values in datasets.\n");
+		exit(1);
+	}
+
+	if ((dp = opendir(dirname)) == NULL)
+	{
+		fprintf(stderr, "evaluate: can't open %s\n", dirname);
+		exit(1);
+	}
+
+
+	printf("%-12s | %-8s | %3s\n", "Filename", "Spearman", "OOV");
+	printf("==============================\n");
+	while ((ent = readdir(dp)) != NULL)
+	{
+		if (strcmp(ent->d_name, ".") == 0
+		 || strcmp(ent->d_name, "..") == 0)
+			continue;
+
+		strcpy(filepath, DATADIR);
+		strcat(filepath, ent->d_name);
+		if ((fp = fopen(filepath, "r")) == NULL)
+		{
+			fprintf(stderr, "evaluate: can't open file %s\n",
+			        filepath);
+			continue;
+		}
+
+		found = nlines = 0;
+		while (fscanf(fp, "%s %s %f", word1, word2, &val) > 0
+		    && nlines < MAXLINES)
+		{
+			++nlines;
+			lower(word1);
+			lower(word2);
+			index1 = get_index(word1);
+			index2 = get_index(word2);
+
+			if (vec[index1] == NULL || vec[index2] == NULL)
+				continue;
+
+			simfile[found] = val;
+			simvec[found] = binary_sim(vec[index1], vec[index2]);
+			++found;
+		}
+
+		val = spearman_coef(simfile, simvec, found);
+		printf("%-12s | %8.3f | %3ld%%\n", ent->d_name, val,
+		       (nlines - found) * 100 /  nlines);
+		fclose(fp);
+	}
+	closedir(dp);
+}
+
 int main(void)
 {
 	unsigned long **embedding;
 
 	create_vocab(DATADIR);
 	embedding = load_vectors("out.txt");
+	evaluate(DATADIR, embedding);
 
 	return 0;
 }
