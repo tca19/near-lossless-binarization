@@ -142,6 +142,17 @@ unsigned long **load_vectors(char *name)
 	return vec;
 }
 
+/* binary_sim: return the Sokal-Michener binary similarity (#common / size). */
+float binary_sim(unsigned long *v1, unsigned long *v2)
+{
+	int n, i;
+
+	/* need the ~ because *v1 ^ *v2 sets the bit to 0 if same bit */
+	for (n = 0, i = 0; i++ < n_long; v1++, v2++)
+		n += __builtin_popcountl(~*v1 ^ *v2);
+	return n / (float) n_bits;
+}
+
 int main(void)
 {
 	unsigned long **embedding;
