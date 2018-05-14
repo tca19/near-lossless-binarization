@@ -99,45 +99,55 @@ void create_vocab(char *dirname)
 	}
 }
 
-/* read_binary_embeddings: read the file name to get binary vectors */
-void read_binary_embeddings(char *name)
+/* load_vectors: read the vector file, only load the vectors of words present in
+ *               hashtab (so at most word_index+1 vectors). Save each vector as
+ *               an array of `long`, so to represent a vector of 256 bits
+ *               it requires an array of 4 `long`. */
+unsigned long **load_vectors(char *name)
 {
-	int dim;
-	int n_int, i;
-	FILE *fp;
-	unsigned long l;
-	char word[MAXLENWORD];
+	int i;
+	long index;
+	FILE *fp;                /* to open vector file */
+	char word[MAXLENWORD];   /* to read the word of each line in file */
+	unsigned long **vec;     /* to store the binary embeddings */
 
 	if ((fp = fopen(name, "r")) == NULL)
 	{
-		fprintf(stderr, "read_binary_embeddings: can't open %s\n",
-		        name);
+		fprintf(stderr, "load_vectors: can't open %s\n", name);
 		exit(1);
 	}
 
-	if (fscanf(fp, "%d", &dim) <= 0)
+	if (fscanf(fp, "%d", &n_bits) <= 0)
 	{
-		fprintf(stderr, "read_binary_embeddings: can't read dimension"
-		        " of binary vectors.\n");
+		fprintf(stderr, "load_vectors: can't read number of bits\n");
 		exit(1);
 	}
 
-	n_int = dim / (sizeof(long) * 8);
-	printf("%d\n", n_int);
+	n_long = n_bits / (sizeof(long) * 8);
+	if ((vec = calloc(word_index + 1, sizeof *vec)) == NULL)
+		return NULL;
+
 	while (fscanf(fp, "%s", word) > 0)
 	{
-		printf("\n%s", word);
-		for (i = 0; i < n_int; ++i)
-		{
-			fscanf(fp, "%lu", &l);
-			printf(" %lu", l);
-		}
+		index = get_index(word);
+		if (index == -1)    /* drop the words not in vocab */
+			continue;
+		if ((vec[index] = calloc(n_long, sizeof **vec)) == NULL)
+			continue;
+
+		for (i = 0; i < n_long; ++i)
+			fscanf(fp, "%lu", vec[index]+i);
 	}
+
+	return vec;
 }
 
 int main(void)
 {
-	vocab_create(DATADIR);
-	read_binary_embeddings("out.txt");
+	unsigned long **embedding;
+
+	create_vocab(DATADIR);
+	embedding = load_vectors("out.txt");
+
 	return 0;
 }
