@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define HASHSIZE   10000
+#define HASHSIZE   1000000
 #define MAXLENWORD 64
 
 struct nlist
@@ -12,9 +12,17 @@ struct nlist
 	long index;
 };
 
+struct neighbor
+{
+	long index;
+	float similarity;
+};
+
 static struct nlist *hashtab[HASHSIZE]; /* hashtab composed of linked lists */
 static long word_index = 0;             /* index of vector associated to word */
 static int n_bits = 0, n_long = 0;      /* #bits per vector, #long per array */
+static long n_words = 0;
+static char **words;
 
 /* hash: form hash value for string s */
 unsigned int hash(const char *s)
@@ -53,6 +61,7 @@ void add_word(const char *s)
 		return;
 
 	strcpy(np->word, s);
+	words[word_index] = np->word;
 	np->next = hashtab[hashval];
 	np->index = word_index++;
 	hashtab[hashval] = np;
@@ -64,7 +73,7 @@ void add_word(const char *s)
 unsigned long **load_vectors(char *name)
 {
 	int i;
-	long index, n_words;
+	long index;
 	FILE *fp;                 /* to open vector file */
 	char word[MAXLENWORD];    /* to read the word of each line in file */
 	unsigned long **vec;      /* to store the binary embeddings */
@@ -85,6 +94,9 @@ unsigned long **load_vectors(char *name)
 	if ((vec = calloc(n_words, sizeof *vec)) == NULL)
 		return NULL;
 
+	if ((words = calloc(n_words, sizeof *words)) == NULL)
+		fprintf(stderr, "load_vectors: no memory for index<=>word\n");
+
 	while (fscanf(fp, "%s", word) > 0)
 	{
 		/* add word to hashtab; its index is word_index because never
@@ -103,11 +115,67 @@ unsigned long **load_vectors(char *name)
 	return vec;
 }
 
+/* binary_sim: return the Sokal-Michener binary similarity (#common / size). */
+float binary_sim(unsigned long *v1, unsigned long *v2)
+{
+	int n, i;
+
+	/* need the ~ because *v1 ^ *v2 sets the bit to 0 if same bit */
+	for (n = 0, i = 0; i++ < n_long; v1++, v2++)
+		n += __builtin_popcountl(~*v1 ^ *v2);
+	return n / (float) n_bits;
+}
+
+/* find_topk: return the k nearest neighbors of word */
+struct neighbor *find_topk(char *word, int k, unsigned long **vec)
+{
+	long i, j, index;
+	struct neighbor *topk, tmp;
+
+	if ((topk = calloc(k + 1, sizeof *topk)) == NULL)
+	{
+		fprintf(stderr, "find_topk: can't allocate memory for heap\n");
+		exit(1);
+	}
+
+	index = get_index(word);
+	for (i = 0; i < n_words; ++i)
+	{
+		if (i == index)  /* skip word (always its nearest neighbor) */
+			continue;
+
+		/* values in topk are sorted by decreasing similarity. If the
+		 * similarity with current vector is greater than minimal
+		 * similarity in topk, insert current similarity into topk */
+		topk[k].similarity = binary_sim(vec[index], vec[i]);
+		if (topk[k].similarity < topk[k-1].similarity)
+			continue;
+
+		for (topk[k].index = i, j = k;
+		     j > 0 && topk[j].similarity > topk[j-1].similarity;
+		     --j)
+		{
+			/* swap element j-1 with element j */
+			tmp = topk[j-1];
+			topk[j-1] = topk[j];
+			topk[j] = tmp;
+		}
+	}
+	return topk;
+}
+
+
 int main(void)
 {
 	unsigned long **embedding;
+	struct neighbor *topk;
+	int i;
 
 	embedding = load_vectors("out.txt");
+	topk = find_topk("queen", 10, embedding);
+
+	for (i = 0; i < 10; ++i)
+		printf("%s %f\n", words[topk[i].index], topk[i].similarity);
 
 	return 0;
 }
