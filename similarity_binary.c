@@ -3,9 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "spearman.c"
 
-#define DATADIR    "similarity/"
+#define DATADIR    "datasets/"
 #define HASHSIZE   10000
 #define MAXLINES   3500
 #define MAXLENPATH 64
@@ -108,7 +109,6 @@ void create_vocab(char *dirname)
 			add_word(word1);
 			add_word(word2);
 		}
-
 		fclose(fp);
 	}
 	closedir(dp);
@@ -154,6 +154,7 @@ unsigned long **load_vectors(char *name)
 			fscanf(fp, "%lu", vec[index]+i);
 	}
 
+	fclose(fp);
 	return vec;
 }
 
@@ -192,7 +193,6 @@ void evaluate(char *dirname, unsigned long **vec)
 		fprintf(stderr, "evaluate: can't open %s\n", dirname);
 		exit(1);
 	}
-
 
 	printf("%-12s | %-8s | %3s\n", "Filename", "Spearman", "OOV");
 	printf("==============================\n");
@@ -237,13 +237,31 @@ void evaluate(char *dirname, unsigned long **vec)
 	closedir(dp);
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	unsigned long **embedding;
+	clock_t start, end;
 
+	if (argc != 2)
+	{
+		printf("usage: ./similarity_binary EMBEDDING\n");
+		exit(1);
+	}
+
+	start = clock();
 	create_vocab(DATADIR);
-	embedding = load_vectors("out.txt");
+	end = clock();
+	printf("create_vocab(): %fs\n", (double) (end-start) / CLOCKS_PER_SEC);
+
+	start = clock();
+	embedding = load_vectors(*++argv);
+	end = clock();
+	printf("load_vectors(): %fs\n", (double) (end-start) / CLOCKS_PER_SEC);
+
+	start = clock();
 	evaluate(DATADIR, embedding);
+	end = clock();
+	printf("evaluate(): %fs\n", (double) (end-start) / CLOCKS_PER_SEC);
 
 	return 0;
 }
