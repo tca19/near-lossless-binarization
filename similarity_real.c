@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "spearman.c"
 
 #define DATADIR    "datasets/"
@@ -242,6 +243,7 @@ void evaluate(char *dirname, float **vec)
 int main(int argc, char *argv[])
 {
 	float **embedding;
+	clock_t start, end;
 
 	if (argc != 2)
 	{
@@ -249,9 +251,20 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	start = clock();
 	create_vocab(DATADIR);
+	end = clock();
+	printf("create_vocab(): %fs\n", (double) (end-start) / CLOCKS_PER_SEC);
+
+	start = clock();
 	embedding = load_vectors(*++argv);
+	end = clock();
+	printf("load_vectors(): %fs\n", (double) (end-start) / CLOCKS_PER_SEC);
+
+	start = clock();
 	evaluate(DATADIR, embedding);
+	end = clock();
+	printf("evaluate(): %fs\n", (double) (end-start) / CLOCKS_PER_SEC);
 
 	return 0;
 }
