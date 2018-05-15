@@ -164,18 +164,31 @@ struct neighbor *find_topk(char *word, int k, unsigned long **vec)
 	return topk;
 }
 
-
-int main(void)
+int main(int argc, char *argv[])
 {
 	unsigned long **embedding;
 	struct neighbor *topk;
-	int i;
+	int i, k;
 
+	if (argc < 3)
+	{
+		printf("usage: ./topk_binary K WORDS...\n");
+		exit(1);
+	}
+
+	k = atoi(*++argv);
 	embedding = load_vectors("out.txt");
-	topk = find_topk("queen", 10, embedding);
 
-	for (i = 0; i < 10; ++i)
-		printf("%s %f\n", words[topk[i].index], topk[i].similarity);
+	while (--argc > 1)
+	{
+		topk = find_topk(*++argv, k, embedding);
+
+		printf("Top %d closest words of %s\n", k, *argv);
+		for (i = 0; i < k; ++i)
+			printf("  %-15s %.3f\n", words[topk[i].index],
+			                         topk[i].similarity);
+		printf("\n");
+	}
 
 	return 0;
 }
