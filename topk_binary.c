@@ -71,7 +71,7 @@ void add_word(const char *s)
 /* load_vectors: read the vector file, add each word to hashtab, save each
  *               vector as an array of `long`, so to represent a vector of 256
  *               bits it requires an array of 4 `long`. */
-unsigned long **load_vectors(char *name)
+unsigned long **load_vectors(const char *name)
 {
 	int i;
 	long index;
@@ -117,7 +117,7 @@ unsigned long **load_vectors(char *name)
 }
 
 /* binary_sim: return the Sokal-Michener binary similarity (#common / size). */
-float binary_sim(unsigned long *v1, unsigned long *v2)
+float binary_sim(const unsigned long *v1, const unsigned long *v2)
 {
 	int n, i;
 
@@ -128,7 +128,7 @@ float binary_sim(unsigned long *v1, unsigned long *v2)
 }
 
 /* find_topk: return the k nearest neighbors of word */
-struct neighbor *find_topk(char *word, int k, unsigned long **vec)
+struct neighbor *find_topk(const char *word, const int k, unsigned long **vec)
 {
 	long i, j, index;
 	struct neighbor *topk, tmp;
@@ -172,16 +172,17 @@ int main(int argc, char *argv[])
 	int i, k;
 	clock_t start, end;
 
-	if (argc < 3)
+	if (argc < 4)
 	{
-		printf("usage: ./topk_binary K WORDS...\n");
+		printf("usage: ./topk_binary EMBEDDING K QUERY...\n");
 		exit(1);
 	}
 
+	embedding = load_vectors(*++argv);
 	k = atoi(*++argv);
-	embedding = load_vectors("out.txt");
+	argc -= 2; /* because already used argument 0 and 1 */
 
-	while (--argc > 1)
+	while (--argc > 0)
 	{
 		start = clock();
 		topk = find_topk(*++argv, k, embedding);
