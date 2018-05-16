@@ -7,7 +7,7 @@
 #include "spearman.c"
 
 #define DATADIR    "datasets/"
-#define HASHSIZE   10000
+#define HASHSIZE   1000000
 #define MAXLINES   3500
 #define MAXLENPATH 64
 #define MAXLENWORD 64
@@ -73,7 +73,7 @@ void lower(char *s)
 }
 
 /* create_vocab: read each file in dirname to create vocab of unique words */
-void create_vocab(char *dirname)
+void create_vocab(const char *dirname)
 {
 	DIR *dp;
 	FILE *fp;
@@ -116,7 +116,7 @@ void create_vocab(char *dirname)
 
 /* load_vectors: read the vector file, only load the vectors of words present in
  *               hashtab (so at most word_index+1 vectors). */
-float **load_vectors(char *name)
+float **load_vectors(const char *name)
 {
 	int i;
 	long index;
@@ -156,7 +156,7 @@ float **load_vectors(char *name)
 }
 
 /* cosine_sim: return cosine similarity between vector v1 and v2 */
-float cosine_sim(float *v1, float *v2)
+float cosine_sim(const float *v1, float *v2)
 {
 	int i;
 	float dot, norm1, norm2;
@@ -173,7 +173,7 @@ float cosine_sim(float *v1, float *v2)
 }
 
 /* evaluate: compute Spearman coefficient for each file in dirname */
-void evaluate(char *dirname, float **vec)
+void evaluate(const char *dirname, float **vec)
 {
 	DIR *dp;
 	FILE *fp;

@@ -7,7 +7,7 @@
 #include "spearman.c"
 
 #define DATADIR    "datasets/"
-#define HASHSIZE   10000
+#define HASHSIZE   1000000
 #define MAXLINES   3500
 #define MAXLENPATH 64
 #define MAXLENWORD 64
@@ -74,7 +74,7 @@ void lower(char *s)
 }
 
 /* create_vocab: read each file in dirname to create vocab of unique words */
-void create_vocab(char *dirname)
+void create_vocab(const char *dirname)
 {
 	DIR *dp;
 	FILE *fp;
@@ -119,7 +119,7 @@ void create_vocab(char *dirname)
  *               hashtab (so at most word_index+1 vectors). Save each vector as
  *               an array of `long`, so to represent a vector of 256 bits
  *               it requires an array of 4 `long`. */
-unsigned long **load_vectors(char *name)
+unsigned long **load_vectors(const char *name)
 {
 	int i;
 	long index;
@@ -160,7 +160,7 @@ unsigned long **load_vectors(char *name)
 }
 
 /* binary_sim: return the Sokal-Michener binary similarity (#common / size). */
-float binary_sim(unsigned long *v1, unsigned long *v2)
+float binary_sim(const unsigned long *v1, const unsigned long *v2)
 {
 	int n, i;
 
@@ -171,7 +171,7 @@ float binary_sim(unsigned long *v1, unsigned long *v2)
 }
 
 /* evaluate: compute Spearman coefficient for each file in dirname */
-void evaluate(char *dirname, unsigned long **vec)
+void evaluate(const char *dirname, unsigned long **vec)
 {
 	DIR *dp;
 	FILE *fp;
