@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define HASHSIZE   1000000
 #define MAXLENWORD 64
@@ -169,6 +170,7 @@ int main(int argc, char *argv[])
 	unsigned long **embedding;
 	struct neighbor *topk;
 	int i, k;
+	clock_t start, end;
 
 	if (argc < 3)
 	{
@@ -181,12 +183,16 @@ int main(int argc, char *argv[])
 
 	while (--argc > 1)
 	{
+		start = clock();
 		topk = find_topk(*++argv, k, embedding);
+		end = clock();
 
 		printf("Top %d closest words of %s\n", k, *argv);
 		for (i = 0; i < k; ++i)
 			printf("  %-15s %.3f\n", words[topk[i].index],
 			                         topk[i].similarity);
+		printf("> Query processed in %.3f ms.\n",
+		       (double) (end - start) * 1000 / CLOCKS_PER_SEC);
 		printf("\n");
 	}
 
