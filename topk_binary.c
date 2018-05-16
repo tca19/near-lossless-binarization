@@ -139,7 +139,10 @@ struct neighbor *find_topk(const char *word, const int k, unsigned long **vec)
 		exit(1);
 	}
 
-	index = get_index(word);
+	/* word has no vector, can't find its neighbors */
+	if ((index = get_index(word)) < 0)
+		return NULL;
+
 	for (i = 0; i < n_words; ++i)
 	{
 		if (i == index)  /* skip word (always its nearest neighbor) */
@@ -187,6 +190,13 @@ int main(int argc, char *argv[])
 		start = clock();
 		topk = find_topk(*++argv, k, embedding);
 		end = clock();
+
+		if (topk == NULL)
+		{
+			printf("%s doesn't have a vector; can't find its"
+			       " nearest neighbors.\n\n", *argv);
+			continue;
+		}
 
 		printf("Top %d closest words of %s\n", k, *argv);
 		for (i = 0; i < k; ++i)
