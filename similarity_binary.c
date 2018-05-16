@@ -22,6 +22,7 @@ struct nlist
 static struct nlist *hashtab[HASHSIZE]; /* hashtab composed of linked lists */
 static long word_index = 0;             /* index of vector associated to word */
 static int n_bits = 0, n_long = 0;      /* #bits per vector, #long per array */
+static long n_vecs = 0;                 /* #vectors in embedding file */
 
 /* hash: form hash value for string s */
 unsigned int hash(const char *s)
@@ -132,7 +133,7 @@ unsigned long **load_vectors(char *name)
 		exit(1);
 	}
 
-	if (fscanf(fp, "%d", &n_bits) <= 0)
+	if (fscanf(fp, "%ld %d", &n_vecs, &n_bits) <= 0)
 	{
 		fprintf(stderr, "load_vectors: can't read number of bits\n");
 		exit(1);
