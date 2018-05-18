@@ -176,20 +176,28 @@ int main(int argc, char *argv[])
 	int i, k;
 	clock_t start, end;
 
-	if (argc < 3)
+	if (argc < 4)
 	{
-		printf("usage: ./topk_real K WORDS...\n");
+		printf("usage: ./topk_real EMBEDDING K QUERY...\n");
 		exit(1);
 	}
 
+	embedding = load_vectors(*++argv);
 	k = atoi(*++argv);
-	embedding = load_vectors("gl-300d.vec");
+	argc -= 2; /* because already used argument 0 and 1 */
 
-	while (--argc > 1)
+	while (--argc > 0)
 	{
 		start = clock();
 		topk = find_topk(*++argv, k, embedding);
 		end = clock();
+
+		if (topk == NULL)
+		{
+			printf("%s doesn't have a vector; can't find its"
+			       " nearest neighbors.\n\n", *argv);
+			continue;
+		}
 
 		printf("Top %d closest words of %s\n", k, *argv);
 		for (i = 0; i < k; ++i)
