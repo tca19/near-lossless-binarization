@@ -13,7 +13,7 @@ similarity_real: similarity_real.c
 	$(CC) -o similarity_real similarity_real.c $(CFLAGS)
 
 topk_real: topk_real.c
-	$(CC) -o topk_teal topk_real.c $(CFLAGS)
+	$(CC) -o topk_real topk_real.c $(CFLAGS)
 
 clean:
-	-rm *.o similarity_binary topk_binary
+	-rm *.o similarity_binary topk_binary similarity_real topk_real
