@@ -1,19 +1,19 @@
 CC=gcc
 CFLAGS=-Wall -ansi -pedantic -O3 -march=native -lm
 
-all: similarity_binary topk_binary similarity_real topk_real
+all: similarity_binary
 
-similarity_binary: similarity_binary.c
-	$(CC) -o similarity_binary similarity_binary.c $(CFLAGS)
+similarity_binary: similarity_binary.o hashtab.o spearman.o
+	$(CC) $(CFLAGS) similarity_binary.o hashtab.o spearman.o -o similarity_binary
 
-topk_binary: topk_binary.c
-	$(CC) -o topk_binary topk_binary.c $(CFLAGS)
+similarity_binary.o: similarity_binary.c utils.h
+	$(CC) $(CFLAGS) -c similarity_binary.c
 
-similarity_real: similarity_real.c
-	$(CC) -o similarity_real similarity_real.c $(CFLAGS)
+hashtab.o: hashtab.c utils.h
+	$(CC) $(CFLAGS) -c hashtab.c
 
-topk_real: topk_real.c
-	$(CC) -o topk_real topk_real.c $(CFLAGS)
+spearman.o: spearman.c
+	$(CC) $(CFLAGS) -c spearman.c
 
 clean:
-	-rm *.o similarity_binary topk_binary similarity_real topk_real
+	-rm *.o similarity_binary
