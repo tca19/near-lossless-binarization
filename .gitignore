@@ -1,0 +1,8 @@
+# binary executable
+similarity_binary
+similarity_real
+topk_binary
+topk_real
+
+# object files
+*.o
