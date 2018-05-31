@@ -1,192 +1,36 @@
-#include <dirent.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <time.h>
 #include "utils.h"
 
-#define DATADIR    "datasets/"
-#define MAXLINES   3500
-#define MAXLENPATH 64
-#define MAXLENWORD 64
+#define DATADIR "datasets/"
 
-static int n_bits = 0, n_long = 0;      /* #bits per vector, #long per array */
-static long n_vecs = 0;                 /* #vectors in embedding file */
-
-/* create_vocab: read each file in dirname to create vocab of unique words */
-void create_vocab(const char *dirname)
-{
-	DIR *dp;
-	FILE *fp;
-	struct dirent *ent;
-	char filepath[MAXLENPATH], word1[MAXLENWORD], word2[MAXLENWORD];
-	float val;
-
-	if ((dp = opendir(dirname)) == NULL)
-	{
-		fprintf(stderr, "create_vocab: can't open %s\n", dirname);
-		exit(1);
-	}
-
-	while ((ent = readdir(dp)) != NULL)
-	{
-		if (strcmp(ent->d_name, ".") == 0
-		 || strcmp(ent->d_name, "..") == 0)
-			continue;
-
-		strcpy(filepath, DATADIR);
-		strcat(filepath, ent->d_name);
-		if ((fp = fopen(filepath, "r")) == NULL)
-		{
-			fprintf(stderr, "create_vocab: can't open file %s\n",
-			        filepath);
-			continue;
-		}
-
-		while (fscanf(fp, "%s %s %f", word1, word2, &val) > 0)
-		{
-			lower(word1);
-			lower(word2);
-			add_word(word1);
-			add_word(word2);
-		}
-		fclose(fp);
-	}
-	closedir(dp);
-}
-
-/* load_vectors: read the vector file, only load the vectors of words present in
- *               hashtab (so at most word_index+1 vectors). Save each vector as
- *               an array of `long`, so to represent a vector of 256 bits
- *               it requires an array of 4 `long`. */
-unsigned long **load_vectors(const char *name)
-{
-	int i;
-	long index;
-	FILE *fp;                /* to open vector file */
-	char word[MAXLENWORD];   /* to read the word of each line in file */
-	unsigned long **vec;     /* to store the binary embeddings */
-
-	if ((fp = fopen(name, "r")) == NULL)
-	{
-		fprintf(stderr, "load_vectors: can't open %s\n", name);
-		exit(1);
-	}
-
-	if (fscanf(fp, "%ld %d", &n_vecs, &n_bits) <= 0)
-	{
-		fprintf(stderr, "load_vectors: can't read number of bits\n");
-		exit(1);
-	}
-
-	n_long = n_bits / (sizeof(long) * 8);
-	if ((vec = calloc(word_index + 1, sizeof *vec)) == NULL)
-		return NULL;
-
-	while (fscanf(fp, "%s", word) > 0)
-	{
-		index = get_index(word);
-		if (index == -1)    /* drop the words not in vocab */
-			continue;
-		if ((vec[index] = calloc(n_long, sizeof **vec)) == NULL)
-			continue;
-
-		for (i = 0; i < n_long; ++i)
-			fscanf(fp, "%lu", vec[index]+i);
-	}
-
-	fclose(fp);
-	return vec;
-}
-
-/* binary_sim: return the Sokal-Michener binary similarity (#common / size). */
-float binary_sim(const unsigned long *v1, const unsigned long *v2)
+/* binary_sim: return the Sokal-Michener binary similarity (#common / #bits) */
+float binary_sim(const void *v1, const void *v2, const int n_long)
 {
 	int n, i;
+	static unsigned long *ar1, *ar2;
 
-	/* need the ~ because *v1 ^ *v2 sets the bit to 0 if same bit */
-	for (n = 0, i = 0; i++ < n_long; v1++, v2++)
-		n += __builtin_popcountl(~*v1 ^ *v2);
-	return n / (float) n_bits;
-}
+	ar1 = (unsigned long *) v1;
+	ar2 = (unsigned long *) v2;
 
-/* evaluate: compute Spearman coefficient for each file in dirname */
-void evaluate(const char *dirname, unsigned long **vec)
-{
-	DIR *dp;
-	FILE *fp;
-	struct dirent *ent;
-	char filepath[MAXLENPATH], word1[MAXLENWORD], word2[MAXLENWORD];
-	float val;
-	long index1, index2, found, nlines;
-	float *simfile, *simvec;
+	for (n = 0, i = 0; i++ < n_long; ++ar1, ++ar2)
+		/* need the ~ because *ar1 ^ *ar2 sets the bit to 0 if same bit */
+		n += __builtin_popcountl(~*ar1 ^ *ar2);
 
-	if ((simfile = malloc(MAXLINES * sizeof *simfile)) == NULL
-	 || (simvec  = malloc(MAXLINES * sizeof *simvec))  == NULL)
-	{
-		fprintf(stderr, "evaluate: can't allocate memory to store"
-		        " similarity values in datasets.\n");
-		exit(1);
-	}
-
-	if ((dp = opendir(dirname)) == NULL)
-	{
-		fprintf(stderr, "evaluate: can't open %s\n", dirname);
-		exit(1);
-	}
-
-	printf("%-12s | %-8s | %3s\n", "Filename", "Spearman", "OOV");
-	printf("==============================\n");
-	while ((ent = readdir(dp)) != NULL)
-	{
-		if (strcmp(ent->d_name, ".") == 0
-		 || strcmp(ent->d_name, "..") == 0)
-			continue;
-
-		strcpy(filepath, DATADIR);
-		strcat(filepath, ent->d_name);
-		if ((fp = fopen(filepath, "r")) == NULL)
-		{
-			fprintf(stderr, "evaluate: can't open file %s\n",
-			        filepath);
-			continue;
-		}
-
-		found = nlines = 0;
-		while (fscanf(fp, "%s %s %f", word1, word2, &val) > 0
-		    && nlines < MAXLINES)
-		{
-			++nlines;
-			lower(word1);
-			lower(word2);
-			index1 = get_index(word1);
-			index2 = get_index(word2);
-
-			if (vec[index1] == NULL || vec[index2] == NULL)
-				continue;
-
-			simfile[found] = val;
-			simvec[found] = binary_sim(vec[index1], vec[index2]);
-			++found;
-		}
-
-		val = spearman_coef(simfile, simvec, found);
-		printf("%-12s | %8.3f | %3ld%%\n", ent->d_name, val,
-		       (nlines - found) * 100 /  nlines);
-		fclose(fp);
-	}
-	closedir(dp);
+	return n / (float) (sizeof(long) * 8 * n_long);
 }
 
 int main(int argc, char *argv[])
 {
+	int n_bits, n_long;         /* #bits per vector, #long per array */
+	long n_vecs;                /* #vectors in embedding file */
 	unsigned long **embedding;
 	clock_t start, end;
 
 	if (argc != 2)
 	{
 		printf("usage: ./similarity_binary EMBEDDING\n");
-		exit(1);
+		return 1;
 	}
 
 	start = clock();
@@ -195,12 +39,12 @@ int main(int argc, char *argv[])
 	printf("create_vocab(): %fs\n", (double) (end-start) / CLOCKS_PER_SEC);
 
 	start = clock();
-	embedding = load_vectors(*++argv);
+	embedding = load_binary_vectors(*++argv, &n_vecs, &n_bits, &n_long);
 	end = clock();
 	printf("load_vectors(): %fs\n", (double) (end-start) / CLOCKS_PER_SEC);
 
 	start = clock();
-	evaluate(DATADIR, embedding);
+	evaluate(DATADIR, (void**) embedding, n_long, binary_sim);
 	end = clock();
 	printf("evaluate(): %fs\n", (double) (end-start) / CLOCKS_PER_SEC);
 
