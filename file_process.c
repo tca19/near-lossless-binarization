@@ -95,9 +95,50 @@ unsigned long **load_binary_vectors(const char *name, long *n_vecs,
 	return vec;
 }
 
+/* load_vectors: read the vector file, only load the vectors of words present in
+ *               hashtab (so at most word_index+1 vectors). */
+float **load_real_vectors(const char *name, long *n_vecs, int *n_dims)
+{
+	int i;
+	long index;
+	FILE *fp;                /* to open vector file */
+	char word[MAXLENWORD];   /* to read the word of each line in file */
+	float **vec;             /* to store the embeddings */
+
+	if ((fp = fopen(name, "r")) == NULL)
+	{
+		fprintf(stderr, "load_vectors: can't open %s\n", name);
+		exit(1);
+	}
+
+	if (fscanf(fp, "%ld %d", n_vecs, n_dims) <= 0)
+	{
+		fprintf(stderr, "load_vectors: can't read dimension\n");
+		exit(1);
+	}
+
+	if ((vec = calloc(word_index + 1, sizeof *vec)) == NULL)
+		return NULL;
+
+	while (fscanf(fp, "%s", word) > 0)
+	{
+		index = get_index(word);
+		if (index == -1)    /* drop the words not in vocab */
+			continue;
+		if ((vec[index] = calloc(*n_dims, sizeof **vec)) == NULL)
+			continue;
+
+		for (i = 0; i < *n_dims; ++i)
+			fscanf(fp, "%f", vec[index]+i);
+	}
+
+	fclose(fp);
+	return vec;
+}
+
 /* evaluate: compute Spearman coefficient for each file in dirname */
 void evaluate(const char *dirname, void **vec, int n_dim,
-	      float (*f)(const void*, const void*, const int))
+	      float (*sim)(const void*, const void*, const int))
 {
 	DIR *dp;
 	FILE *fp;
@@ -152,7 +193,7 @@ void evaluate(const char *dirname, void **vec, int n_dim,
 				continue;
 
 			simfile[found] = val;
-			simvec[found] = f(vec[index1], vec[index2], n_dim);
+			simvec[found] = sim(vec[index1], vec[index2], n_dim);
 			++found;
 		}
 
