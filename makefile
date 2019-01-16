@@ -1,7 +1,11 @@
-CC=gcc
-CFLAGS=-Wall -ansi -pedantic -O3 -march=native -lm
+CC      = gcc
+CFLAGS  = -ansi -pedantic -lm -pthread -Ofast -funroll-loops
+CFLAGS += -Wall -Wextra -Wno-unused-result
 
-all: similarity_binary similarity_real
+all: binarize similarity_binary similarity_real
+
+binarize: binarize.c
+	$(CC) $(CFLAGS) binarize.c -o binarize
 
 similarity_binary: similarity_binary.o hashtab.o spearman.o file_process.o
 	$(CC) $(CFLAGS) similarity_binary.o hashtab.o spearman.o file_process.o \
@@ -27,4 +31,4 @@ file_process.o: file_process.c
 	$(CC) $(CFLAGS) -c file_process.c
 
 clean:
-	-rm *.o similarity_binary similarity_real
+	-rm *.o binarize similarity_binary similarity_real
