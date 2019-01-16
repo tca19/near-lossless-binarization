@@ -4,14 +4,14 @@
 #define MAXWORDLEN 128       /* buffer size when reading words of embedding */
 
 /* load the list of words and vectors from `filename`; return the embedding */
-float **load_embedding(const char *filename, char ***words,
+float *load_embedding(const char *filename, char ***words,
 		       long *n_vecs, int *n_dims)
 {
 	int i;
 	long index;
 	FILE *fp;                  /* to open the vector file */
 	char buffer[MAXWORDLEN];   /* to read the word of each vector */
-	float **vec;               /* to store the word vectors */
+	float *vec;                /* to store the word vectors */
 
 	if ((fp = fopen(filename, "r")) == NULL)
 	{
@@ -40,7 +40,7 @@ float **load_embedding(const char *filename, char ***words,
 		exit(1);
 	}
 
-	if ((vec = calloc(*n_vecs, sizeof *vec)) == NULL)
+	if ((vec = calloc(*n_vecs * *n_dims, sizeof *vec)) == NULL)
 	{
 		fprintf(stderr, "load_embedding: can't allocate memory for "
 		        "embedding\n");
@@ -52,11 +52,8 @@ float **load_embedding(const char *filename, char ***words,
 	while (fscanf(fp, "%s", buffer) > 0)
 	{
 		(*words)[index] = strdup(buffer);
-		if ((vec[index] = calloc(*n_dims, sizeof **vec)) == NULL)
-			continue;
-
-		for (i = 0; i < *n_dims; ++i)
-			fscanf(fp, "%f", vec[index] + i);
+		for (i = *n_dims * index; i < *n_dims * (index+1); ++i)
+			fscanf(fp, "%f", vec + i);
 		++index;
 	}
 
@@ -67,7 +64,7 @@ float **load_embedding(const char *filename, char ***words,
 int main(int argc, char *argv[])
 {
 	char **words;
-	float **embedding;
+	float *embedding;
 	long n_vecs;
 	int n_dims;
 
