@@ -5,7 +5,7 @@
 #define MAXWORDLEN 128       /* buffer size when reading words of embedding */
 
 /* read a word from ̣`fp` into `buffer`; read at most MAXWORDLEN characters */
-void read_word(FILE *fp, char **buffer)
+static inline void read_word(FILE *fp, char **buffer)
 {
 	static char tmp[MAXWORDLEN];
 	int i = 0;
@@ -20,6 +20,37 @@ void read_word(FILE *fp, char **buffer)
 
 	tmp[i] = '\0';
 	*buffer = strdup(tmp);
+}
+
+/* read and return a float value from ̣`fp`, handle scientific notation */
+static inline float read_float(FILE *fp)
+{
+	float val, power;
+	int sign;
+	char c;
+
+	/* skip white spaces */
+	while (isspace((c= getc_unlocked(fp))))
+		;
+
+	/* handle optional sign */
+	sign = (c == '-') ? -1 : 1;
+	if (c == '+' || c == '-')
+		c = getc_unlocked(fp);
+
+	/* get integer part */
+	for (val = 0.0; isdigit(c); c = getc_unlocked(fp))
+		val = 10.0 * val + (c - '0');
+
+	/* get decimal part */
+	if (c == '.') c = getc_unlocked(fp);
+	for (power = 1.0; isdigit(c); c = getc_unlocked(fp))
+	{
+		val = 10.0 * val + (c - '0');
+		power *= 10.0;
+	}
+
+	return sign * val / power;
 }
 
 /* load the list of words and vectors from `filename`; return the embedding */
@@ -43,7 +74,7 @@ float *load_embedding(const char *filename, char ***words,
 	{
 		fprintf(stderr, "load_embedding: first line of %s should "
 		        "contain the number of words in file and the dimension "
-			"of vectors\n", filename);
+		        "of vectors\n", filename);
 		exit(1);
 	}
 
@@ -72,7 +103,7 @@ float *load_embedding(const char *filename, char ***words,
 	{
 		read_word(fp, *words + index);
 		for (i = *n_dims * index; i < *n_dims * (index+1); ++i)
-			fscanf(fp, "%f", vec + i);
+			vec[i] = read_float(fp);
 		++index;
 	}
 
