@@ -25,8 +25,8 @@ static inline void read_word(FILE *fp, char **buffer)
 /* read and return a float value from ̣`fp`, handle scientific notation */
 static inline float read_float(FILE *fp)
 {
-	float val, power;
-	int sign;
+	float val, power, power_e;
+	int sign, exponent;
 	char c;
 
 	/* skip white spaces */
@@ -49,6 +49,19 @@ static inline float read_float(FILE *fp)
 		val = 10.0 * val + (c - '0');
 		power *= 10.0;
 	}
+
+	/* get scientific notation part */
+	if (c == 'e' || c == 'E') c = getc_unlocked(fp);
+	/* if e (or E) is followed by '-', it means we need to divide the float
+	 * value by a power of 10. Otherwise, we divide it by a power of 0.1
+	 * (i.e. multiply by a power of 10) */
+	power_e = (c == '-') ? 10 : 0.1;
+	if (c == '-' || c == '+') c = getc_unlocked(fp);
+
+	for (exponent = 0; isdigit(c); c = getc_unlocked(fp))
+		exponent = 10 * exponent + (c - '0');
+	while (exponent-- > 0)
+		power *= power_e;
 
 	return sign * val / power;
 }
