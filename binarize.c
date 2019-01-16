@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define MAXWORDLEN 32     /* buffer size when reading words of embedding */
+#define MAXWORDLEN 128       /* buffer size when reading words of embedding */
 
 /* load the list of words and vectors from `filename`; return the embedding */
 float **load_embedding(const char *filename, char ***words,
@@ -12,7 +12,6 @@ float **load_embedding(const char *filename, char ***words,
 	FILE *fp;                  /* to open the vector file */
 	char buffer[MAXWORDLEN];   /* to read the word of each vector */
 	float **vec;               /* to store the word vectors */
-	*words = NULL;
 
 	if ((fp = fopen(filename, "r")) == NULL)
 	{
@@ -31,9 +30,10 @@ float **load_embedding(const char *filename, char ***words,
 
 	/* `words` is supposed to be an array of strings (so char**) but we are
 	 * passing it by reference to directly modify the variable passed as a
-	 * parameter, so one more level of indirection. `*word` is the content
-	 * of the passed pointer (the actual array of strings) */
-	if ((*words = calloc(*n_vecs, sizeof *words)) == NULL)
+	 * parameter, so one more level of indirection (that's why it is
+	 * char***). `*word` is the content of the passed pointer (the actual
+	 * array of strings) */
+	if ((*words = calloc(*n_vecs, sizeof **words)) == NULL)
 	{
 		fprintf(stderr, "load_embedding: can't allocate memory for "
 		        "words\n");
@@ -72,7 +72,5 @@ int main(int argc, char *argv[])
 	int n_dims;
 
 	embedding = load_embedding(argv[1], &words, &n_vecs, &n_dims);
-	printf("%s %s", words[0], words[1]);
-
 	return 0;
 }
