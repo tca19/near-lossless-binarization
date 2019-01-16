@@ -1,7 +1,26 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #define MAXWORDLEN 128       /* buffer size when reading words of embedding */
+
+/* read a word from ̣`fp` into `buffer`; read at most MAXWORDLEN characters */
+void read_word(FILE *fp, char **buffer)
+{
+	static char tmp[MAXWORDLEN];
+	int i = 0;
+
+	/* skip white spaces (space or line feed (ascii code 0x0a)) */
+	while (isspace((tmp[i] = getc_unlocked(fp))))
+		;
+
+	++i; /* move one position because tmp[i] is not a white space */
+	while ((tmp[i] = getc_unlocked(fp)) != ' ' && i < MAXWORDLEN-1)
+		++i;
+
+	tmp[i] = '\0';
+	*buffer = strdup(tmp);
+}
 
 /* load the list of words and vectors from `filename`; return the embedding */
 float *load_embedding(const char *filename, char ***words,
@@ -49,9 +68,9 @@ float *load_embedding(const char *filename, char ***words,
 
 	/* start reading the word and vector values */
 	index = 0;
-	while (fscanf(fp, "%s", buffer) > 0)
+	while (!feof(fp))
 	{
-		(*words)[index] = strdup(buffer);
+		read_word(fp, *words + index);
 		for (i = *n_dims * index; i < *n_dims * (index+1); ++i)
 			fscanf(fp, "%f", vec + i);
 		++index;
