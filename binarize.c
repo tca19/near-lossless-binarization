@@ -61,6 +61,16 @@ float *load_embedding(const char *filename, char ***words,
 	return vec;
 }
 
+/* free the memory used to store the list of words */
+void destroy_word_list(char **words, long n_vecs)
+{
+	/* each cell of `words` is a string created with strdup. Need to free
+	 * the memory allocated for each cell */
+	while (n_vecs--)
+		free(words[n_vecs]);
+	free(words);
+}
+
 int main(int argc, char *argv[])
 {
 	char **words;
@@ -69,5 +79,8 @@ int main(int argc, char *argv[])
 	int n_dims;
 
 	embedding = load_embedding(argv[1], &words, &n_vecs, &n_dims);
+
+	destroy_word_list(words, n_vecs);
+	free(embedding); /* `embedding` is created with a single calloc */
 	return 0;
 }
