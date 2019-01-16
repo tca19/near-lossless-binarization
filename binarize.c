@@ -5,9 +5,10 @@
 #define MAXWORDLEN 128       /* buffer size when reading words of embedding */
 
 /* read a word from ̣`fp` into `buffer`; read at most MAXWORDLEN characters */
-static inline void read_word(FILE *fp, char **buffer)
+void read_word(FILE *fp, char **buffer)
 {
 	static char tmp[MAXWORDLEN];
+	static size_t len;
 	int i = 0;
 
 	/* skip white spaces (space or line feed (ascii code 0x0a)) */
@@ -17,13 +18,21 @@ static inline void read_word(FILE *fp, char **buffer)
 	++i; /* move one position because tmp[i] is not a white space */
 	while ((tmp[i] = getc_unlocked(fp)) != ' ' && i < MAXWORDLEN-1)
 		++i;
-
 	tmp[i] = '\0';
-	*buffer = strdup(tmp);
+
+	/* copy tmp into buffer; need to allocate memory for that */
+	len = strlen(tmp);
+	if ((*buffer = malloc(len + 1)) == NULL)
+	{
+		fprintf(stderr, "read_word: can't allocate memory for %s\n",
+		        tmp);
+		exit(1);
+	}
+	memcpy(*buffer, tmp, len+1);
 }
 
 /* read and return a float value from ̣`fp`, handle scientific notation */
-static inline float read_float(FILE *fp)
+float read_float(FILE *fp)
 {
 	float val, power, power_e;
 	int sign, exponent;
@@ -73,7 +82,6 @@ float *load_embedding(const char *filename, char ***words,
 	int i;
 	long index;
 	FILE *fp;                  /* to open the vector file */
-	char buffer[MAXWORDLEN];   /* to read the word of each vector */
 	float *vec;                /* to store the word vectors */
 
 	if ((fp = fopen(filename, "r")) == NULL)
