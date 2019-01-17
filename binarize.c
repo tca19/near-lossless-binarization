@@ -146,6 +146,7 @@ void destroy_word_list(char **words, long n_vecs)
 void binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 {
 	float *W, *C;
+	float norm_W, norm_C;
 	int i;
 
 	/* W is a (n_bits, n_dims) matrix, C is a (n_dims) vector */
@@ -154,10 +155,22 @@ void binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 
 	/* initialize W and C with random float values in [-0.5, 0.5] */
 	srand(0);
-	for (i = 0; i < n_dims * n_bits; ++i)
-		W[i] = ((float) rand() / RAND_MAX) - 0.5f;
-	for (i = 0; i < n_dims; ++i)
+	for (i = 0, norm_W = 0.0f; i < n_dims * n_bits; ++i)
+	{
+		W[i]    = ((float) rand() / RAND_MAX) - 0.5f;
+		norm_W += W[i];
+	}
+	for (i = 0, norm_C = 0.0f; i < n_dims; ++i)
+	{
 		C[i] = ((float) rand() / RAND_MAX) - 0.5f;
+		norm_C += C[i];
+	}
+
+	/* normalize the W matrix and C vector */
+	for (i = 0; i < n_dims * n_bits; ++i)
+		W[i] /= norm_W;
+	for (i = 0; i < n_dims; ++i)
+		C[i] /= norm_C;
 
 	free(W);
 	free(C);
