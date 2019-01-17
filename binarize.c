@@ -146,8 +146,10 @@ void destroy_word_list(char **words, long n_vecs)
 void binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 {
 	float *W, *C;
-	float norm_W, norm_C;
-	int i;
+	float norm_W, norm_C, dot;
+	long *binary_vector;
+	unsigned long bits_group;
+	int i, j, k, n_long;
 
 	/* W is a (n_bits, n_dims) matrix, C is a (n_dims) vector */
 	W = calloc(n_dims * n_bits, sizeof *W);
@@ -172,8 +174,44 @@ void binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 	for (i = 0; i < n_dims; ++i)
 		C[i] /= norm_C;
 
+	/* compute the binary vectors with the original embedding and W. Each
+	 * binary vector is represented as a sequence of `long` so if the binary
+	 * vectors have 256 bits and a `long` has a length of 64 bits, then each
+	 * binary vector is an array of 4 `long` (4 * 64 = 256). The bit
+	 * representation of each long are the bits of the vectors. */
+	n_long = n_bits / (sizeof(long) * 8);
+	binary_vector = calloc(n_vecs * n_long, sizeof *binary_vector);
+	for (i = 0; i < n_vecs; ++i)         /* for each word */
+	{
+		bits_group = 0;
+		for (j = 0; j < n_bits; ++j) /* for each bit */
+		{
+			/* compute dot product between j-th line of W and the
+			 * vector of i-th word. The sign of dot product
+			 * determines if bit is 0 or 1 */
+			dot = 0;
+			for (k = 0; k < n_dims; ++k)
+				dot = W[j*n_dims + k] * embedding[i*n_dims + k];
+
+			/* bits are grouped by pack of (sizeof(long)). Add
+			 * current bit to current group */
+			bits_group <<= 1;
+			bits_group |= (dot > 0);
+
+			/* bits_group has enough bits to form a long, write it
+			 * to the binary vector matrix and reset it */
+			if ((j+1) % (sizeof(long) * 8) == 0)
+			{
+				binary_vector[i*n_long + j/(sizeof(long) * 8)] =
+					bits_group;
+				bits_group = 0;
+			}
+		}
+	}
+
 	free(W);
 	free(C);
+	free(binary_vector);
 }
 
 int main(int argc, char *argv[])
