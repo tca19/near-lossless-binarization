@@ -164,12 +164,11 @@ float *random_array(long size)
 }
 
 /* transform the real-value word vectors of `embedding` into binary vectors */
-void binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
+unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 {
 	float *W, *C;
 	float dot;
-	long *binary_vector;
-	unsigned long bits_group;
+	unsigned long *binary_vector, bits_group;
 	int i, j, k, n_long;
 
 	/* W is a (n_bits, n_dims) matrix, C is a (n_dims) vector */
@@ -214,20 +213,52 @@ void binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 
 	free(W);
 	free(C);
-	free(binary_vector);
+	return binary_vector;
+}
+
+/* write the binary vectors into `filename` */
+void write_binary_vectors(char *filename, char **words, long *binary_vector,
+		          long n_vecs, int n_bits)
+{
+	FILE *fo;
+	long i;
+	int j, n_long;
+
+	if ((fo = fopen(filename, "w")) == NULL)
+	{
+		fprintf(stderr, "write_binary_vectors: can't open %s\n",
+		        filename);
+		exit(1);
+	}
+
+	/* first line is the number of vectors and number of bits per vectors */
+	fprintf(fo, "%ld %d\n", n_vecs, n_bits);
+
+	for (i = 0, n_long = n_bits / (sizeof(long) * 8); i < n_vecs; ++i)
+	{
+		fprintf(fo, "%s", words[i]);
+		for (j = 0; j < n_long; ++j)
+			fprintf(fo, " %lu", binary_vector[i*n_long + j]);
+		fprintf(fo, "\n");
+	}
+
+	fclose(fo);
 }
 
 int main(int argc, char *argv[])
 {
 	char **words;
 	float *embedding;
+	unsigned long *binary_vector;
 	long n_vecs;
 	int n_dims;
 
 	embedding = load_embedding(argv[argc-1], &words, &n_vecs, &n_dims);
-	binarize(embedding, n_vecs, n_dims, 256);
+	binary_vector = binarize(embedding, n_vecs, n_dims, 256);
+	write_binary_vectors("output", words, binary_vector, n_vecs, 256);
 
 	destroy_word_list(words, n_vecs);
 	free(embedding); /* `embedding` is created with a single calloc */
+	free(binary_vector);
 	return 0;
 }
