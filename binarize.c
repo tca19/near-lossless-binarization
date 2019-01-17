@@ -77,7 +77,7 @@ float read_float(FILE *fp)
 
 /* load the list of words and vectors from `filename`; return the embedding */
 float *load_embedding(const char *filename, char ***words,
-		       long *n_vecs, int *n_dims)
+		      long *n_vecs, int *n_dims)
 {
 	int i;
 	long index;
@@ -142,6 +142,27 @@ void destroy_word_list(char **words, long n_vecs)
 	free(words);
 }
 
+/* transform the real-value word vectors of `embedding` into binary vectors */
+void binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
+{
+	float *W, *C;
+	int i;
+
+	/* W is a (n_bits, n_dims) matrix, C is a (n_dims) vector */
+	W = calloc(n_dims * n_bits, sizeof *W);
+	C = calloc(n_dims, sizeof *C);
+
+	/* initialize W and C with random float values in [-0.5, 0.5] */
+	srand(0);
+	for (i = 0; i < n_dims * n_bits; ++i)
+		W[i] = ((float) rand() / RAND_MAX) - 0.5f;
+	for (i = 0; i < n_dims; ++i)
+		C[i] = ((float) rand() / RAND_MAX) - 0.5f;
+
+	free(W);
+	free(C);
+}
+
 int main(int argc, char *argv[])
 {
 	char **words;
@@ -149,7 +170,8 @@ int main(int argc, char *argv[])
 	long n_vecs;
 	int n_dims;
 
-	embedding = load_embedding(argv[1], &words, &n_vecs, &n_dims);
+	embedding = load_embedding(argv[argc-1], &words, &n_vecs, &n_dims);
+	binarize(embedding, n_vecs, n_dims, 256);
 
 	destroy_word_list(words, n_vecs);
 	free(embedding); /* `embedding` is created with a single calloc */
