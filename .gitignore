@@ -1,4 +1,5 @@
-# binary executable
+# binary executables
+binarize
 similarity_binary
 similarity_real
 topk_binary
