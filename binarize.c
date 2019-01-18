@@ -163,6 +163,12 @@ float *random_array(long size)
 	return ar;
 }
 
+/* do forward/backward propagation, compute the gradients, update W and C */
+void process_batch(float *embedding, float *W, float *C, int batch_size,
+		   int n_dims, int n_bits)
+{
+}
+
 /* transform the real-value word vectors of `embedding` into binary vectors */
 unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 {
@@ -170,11 +176,24 @@ unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 	float dot;
 	unsigned long *binary_vector, bits_group;
 	int i, j, k, n_long;
+	int batch_size = 75;
 
 	/* W is a (n_bits, n_dims) matrix, C is a (n_dims) vector */
 	srand(0);
 	W = random_array(n_dims * n_bits);
 	C = random_array(n_dims);
+
+	/* T R A I N I N G */
+	for (i = 0; i < 5; ++i) /* for each iteration */
+	{
+		for (j = 0; j + batch_size - 1 < n_vecs; j += batch_size)
+			process_batch(embedding + j * n_dims, W, C, batch_size,
+			              n_dims, n_bits);
+
+		if (j != n_vecs) /* process remaining vectors not in batch */
+			process_batch(embedding + j * n_dims, W, C, n_vecs - j,
+			              n_dims, n_bits);
+	}
 
 	/* compute the binary vectors with the original embedding and W. Each
 	 * binary vector is represented as a sequence of `long` so if the binary
@@ -217,8 +236,8 @@ unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 }
 
 /* write the binary vectors into `filename` */
-void write_binary_vectors(char *filename, char **words, long *binary_vector,
-		          long n_vecs, int n_bits)
+void write_binary_vectors(char *filename, char **words,
+		          unsigned long *binary_vector, long n_vecs, int n_bits)
 {
 	FILE *fo;
 	long i;
