@@ -169,8 +169,8 @@ double *random_array(long size)
 /* compute the gradient of the regularization w.r.t W, update weigths of W */
 void apply_regularizarion_gradient(double *W, int m, int n, double lr_reg)
 {
-	double *T, *dReguldW;
-	int i, j;
+	double *T;
+	int i;
 
 	/* T = W'.W - I;
 	 * W is a (m,n) matrix, W' is a (n,m) matrix so T is a (n,n) matrix */
@@ -186,23 +186,16 @@ void apply_regularizarion_gradient(double *W, int m, int n, double lr_reg)
 	for (i = 0; i < n; ++i)
 		T[i * n + i] -= 1.0;
 
-	/* dReguldW = 2 * W.T;
-	 * W is a (m,n) matrix, T a (n,n) matrix so dReguldW is (m,n) matrix */
-	dReguldW = calloc(m * n, sizeof *dReguldW);
-
-	/* compute dReguldW = 2 * W.T */
+	/* gradient matrix is dRdW = 2 * W.T, and W is updated with
+	 * W -= lr_reg * dRdW. Compute dRdW, but directly update
+	 * the weights of W (the function cblas_dgemm(A, B, C) performs the
+	 * matrix operation:  C = alpha * A.B + beta * C) */
 	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
 	            m, n, n,
-	            2, W, n, T, n,
-	            0, dReguldW, n);
-
-	/* update the weights of W with dReguldW */
-	for (i = 0; i < m; ++i)
-		for (j = 0; j < n; ++j)
-			W[i * n + j] -= lr_reg * dReguldW[i * n + j];
+	            -2 * lr_reg, W, n, T, n,
+	            1, W, n);
 
 	free(T);
-	free(dReguldW);
 	return;
 }
 
