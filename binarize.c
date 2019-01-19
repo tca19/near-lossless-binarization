@@ -33,10 +33,10 @@ void read_word(FILE *fp, char **buffer)
 	memcpy(*buffer, tmp, len+1);
 }
 
-/* read and return a double value from ̣`fp`, handle scientific notation */
-double read_double(FILE *fp)
+/* read and return a float value from ̣`fp`, handle scientific notation */
+float read_float(FILE *fp)
 {
-	double val, power, power_e;
+	float val, power, power_e;
 	int sign, exponent;
 	char c;
 
@@ -63,7 +63,7 @@ double read_double(FILE *fp)
 
 	/* get scientific notation part */
 	if (c == 'e' || c == 'E') c = getc_unlocked(fp);
-	/* if e (or E) is followed by '-', it means we need to divide the double
+	/* if e (or E) is followed by '-', it means we need to divide the float
 	 * value by a power of 10. Otherwise, we divide it by a power of 0.1
 	 * (i.e. multiply by a power of 10) */
 	power_e = (c == '-') ? 10 : 0.1;
@@ -78,13 +78,13 @@ double read_double(FILE *fp)
 }
 
 /* load the list of words and vectors from `filename`; return the embedding */
-double *load_embedding(const char *filename, char ***words,
-		       long *n_vecs, int *n_dims)
+float *load_embedding(const char *filename, char ***words,
+		      long *n_vecs, int *n_dims)
 {
 	int i;
 	long index;
 	FILE *fp;                  /* to open the vector file */
-	double *vec;                /* to store the word vectors */
+	float *vec;                /* to store the word vectors */
 
 	if ((fp = fopen(filename, "r")) == NULL)
 	{
@@ -126,7 +126,7 @@ double *load_embedding(const char *filename, char ***words,
 	{
 		read_word(fp, *words + index);
 		for (i = *n_dims * index; i < *n_dims * (index+1); ++i)
-			vec[i] = read_double(fp);
+			vec[i] = read_float(fp);
 		++index;
 	}
 
@@ -144,18 +144,18 @@ void destroy_word_list(char **words, long n_vecs)
 	free(words);
 }
 
-/* return a new memory allocated array of random doubles, normalized to 1 */
-double *random_array(long size)
+/* return a new memory allocated array of random floats, normalized to 1 */
+float *random_array(long size)
 {
-	double *ar, norm;
+	float *ar, norm;
 	long i;
 
 	ar = calloc(size, sizeof *ar);
 
-	/* initalize ar with random double values in [-0.5, 0.5] */
+	/* initalize ar with random float values in [-0.5, 0.5] */
 	for (i = 0, norm = 0.0f; i < size; ++i)
 	{
-		ar[i] = ((double) rand() / RAND_MAX) - 0.5f;
+		ar[i] = ((float) rand() / RAND_MAX) - 0.5f;
 		norm += ar[i] * ar[i];
 	}
 
@@ -167,9 +167,9 @@ double *random_array(long size)
 }
 
 /* compute the gradient of the regularization w.r.t W, update weigths of W */
-void apply_regularizarion_gradient(double *W, int m, int n, double lr_reg)
+void apply_regularizarion_gradient(float *W, int m, int n, float lr_reg)
 {
-	double *T, *copy;
+	float *T, *copy;
 	int i;
 
 	/* T = W'.W - I;
@@ -177,7 +177,7 @@ void apply_regularizarion_gradient(double *W, int m, int n, double lr_reg)
 	T = calloc(n * n, sizeof *T);
 
 	/* compute T = W'.W */
-	cblas_dgemm(CblasRowMajor, CblasTrans, CblasNoTrans,
+	cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans,
 	            n, n, m,
 	            1, W, n, W, n,
 	            0, T, n);
@@ -190,7 +190,7 @@ void apply_regularizarion_gradient(double *W, int m, int n, double lr_reg)
 	 * W -= lr_reg * dRdW. Compute dRdW, but directly update
 	 * the weights of W (the function cblas_dgemm(A, B, C) performs the
 	 * matrix operation:  C = alpha * A.B + beta * C) */
-	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
 	            m, n, n,
 	            -2 * lr_reg, W, n, T, n,
 	            1, W, n);
@@ -200,10 +200,10 @@ void apply_regularizarion_gradient(double *W, int m, int n, double lr_reg)
 }
 
 /* transform the real-value word vectors of `embedding` into binary vectors */
-unsigned long *binarize(double *embedding, long n_vecs, int n_dims, int n_bits)
+unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 {
-	double *W, *C;
-	double dot, lr_reg;
+	float *W, *C;
+	float dot, lr_reg;
 	unsigned long *binary_vector, bits_group;
 	int i, j, k, n_long, batch_size;
 
@@ -213,7 +213,7 @@ unsigned long *binarize(double *embedding, long n_vecs, int n_dims, int n_bits)
 	C = random_array(n_dims);
 
 	lr_reg = 0.001;
-	batch_size = 75;
+	batch_size = 100;
 	for (i = 0; i < 5; ++i) /* for each iteration */
 	{
 		for (j = 0; j + batch_size - 1 < n_vecs; j += batch_size)
@@ -299,7 +299,7 @@ void write_binary_vectors(char *filename, char **words,
 int main(int argc, char *argv[])
 {
 	char **words;
-	double *embedding;
+	float *embedding;
 	unsigned long *binary_vector;
 	long n_vecs;
 	int n_dims;
