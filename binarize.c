@@ -169,7 +169,7 @@ double *random_array(long size)
 /* compute the gradient of the regularization w.r.t W, update weigths of W */
 void apply_regularizarion_gradient(double *W, int m, int n, double lr_reg)
 {
-	double *T;
+	double *T, *copy;
 	int i;
 
 	/* T = W'.W - I;
@@ -183,8 +183,8 @@ void apply_regularizarion_gradient(double *W, int m, int n, double lr_reg)
 	            0, T, n);
 
 	/* compute T = T - I */
-	for (i = 0; i < n; ++i)
-		T[i * n + i] -= 1.0;
+	for (i = 0, copy = T; i++ < n; copy = copy + n + 1)
+		*copy -= 1.0;
 
 	/* gradient matrix is dRdW = 2 * W.T, and W is updated with
 	 * W -= lr_reg * dRdW. Compute dRdW, but directly update
@@ -225,8 +225,6 @@ unsigned long *binarize(double *embedding, long n_vecs, int n_dims, int n_bits)
 		{
 			apply_regularizarion_gradient(W, n_bits, n_dims, lr_reg);
 		}
-
-
 	}
 
 	/* compute the binary vectors with the original embedding and W. Each
