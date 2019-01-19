@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -157,9 +158,10 @@ double *random_array(long size)
 	for (i = 0, norm = 0.0f; i < size; ++i)
 	{
 		ar[i] = ((double) rand() / RAND_MAX) - 0.5f;
-		norm += ar[i];
+		norm += ar[i] * ar[i];
 	}
 
+	norm = sqrt(norm);
 	/* normalize ar */
 	for (i = 0; i < size; ++i)
 		ar[i] /= norm;
