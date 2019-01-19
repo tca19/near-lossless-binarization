@@ -1,12 +1,10 @@
+#include <cblas.h>
 #include <ctype.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #define MAXWORDLEN 128       /* buffer size when reading words of embedding */
-
-extern void dgemm_(char*, char*, int*, int*, int*, double*, double*, int*,
-		   double*, int*, double*, double*, int*);
 
 /* read a word from ̣`fp` into `buffer`; read at most MAXWORDLEN characters */
 void read_word(FILE *fp, char **buffer)
@@ -168,18 +166,75 @@ double *random_array(long size)
 	return ar;
 }
 
+/* compute the gradient of the regularization w.r.t W, update weigths of W */
+void apply_regularizarion_gradient(double *W, int m, int n, double lr_reg)
+{
+	double *T, *dReguldW;
+	int i, j;
+
+	/* T = W'.W - I;
+	 * W is a (m,n) matrix, W' is a (n,m) matrix so T is a (n,n) matrix */
+	T = calloc(n * n, sizeof *T);
+
+	/* compute T = W'.W */
+	cblas_dgemm(CblasRowMajor, CblasTrans, CblasNoTrans,
+	            n, n, m,
+	            1, W, n, W, n,
+	            0, T, n);
+
+	/* compute T = T - I */
+	for (i = 0; i < n; ++i)
+		T[i * n + i] -= 1.0;
+
+	/* dReguldW = 2 * W.T;
+	 * W is a (m,n) matrix, T a (n,n) matrix so dReguldW is (m,n) matrix */
+	dReguldW = calloc(m * n, sizeof *dReguldW);
+
+	/* compute dReguldW = 2 * W.T */
+	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+	            m, n, n,
+	            2, W, n, T, n,
+	            0, dReguldW, n);
+
+	/* update the weights of W with dReguldW */
+	for (i = 0; i < m; ++i)
+		for (j = 0; j < n; ++j)
+			W[i * n + j] -= lr_reg * dReguldW[i * n + j];
+
+	free(T);
+	free(dReguldW);
+	return;
+}
+
 /* transform the real-value word vectors of `embedding` into binary vectors */
 unsigned long *binarize(double *embedding, long n_vecs, int n_dims, int n_bits)
 {
 	double *W, *C;
-	double dot;
+	double dot, lr_reg;
 	unsigned long *binary_vector, bits_group;
-	int i, j, k, n_long;
+	int i, j, k, n_long, batch_size;
 
 	/* W is a (n_bits, n_dims) matrix, C is a (n_dims) vector */
 	srand(0);
 	W = random_array(n_dims * n_bits);
 	C = random_array(n_dims);
+
+	lr_reg = 0.001;
+	batch_size = 75;
+	for (i = 0; i < 5; ++i) /* for each iteration */
+	{
+		for (j = 0; j + batch_size - 1 < n_vecs; j += batch_size)
+		{
+			apply_regularizarion_gradient(W, n_bits, n_dims, lr_reg);
+		}
+
+		if (j != n_vecs) /* process remaining vectors not in batch */
+		{
+			apply_regularizarion_gradient(W, n_bits, n_dims, lr_reg);
+		}
+
+
+	}
 
 	/* compute the binary vectors with the original embedding and W. Each
 	 * binary vector is represented as a sequence of `long` so if the binary
