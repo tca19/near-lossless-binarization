@@ -1,5 +1,5 @@
 CC      = gcc
-CFLAGS  = -ansi -pedantic -lm -pthread -Ofast -funroll-loops
+CFLAGS  = -ansi -pedantic -lm -pthread -Ofast -funroll-loops -lblas
 CFLAGS += -Wall -Wextra -Wno-unused-result
 
 all: binarize similarity_binary similarity_real
