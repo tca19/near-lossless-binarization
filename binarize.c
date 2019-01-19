@@ -198,7 +198,7 @@ unsigned long *binarize(double *embedding, long n_vecs, int n_dims, int n_bits)
 			 * determines if bit is 0 or 1 */
 			dot = 0;
 			for (k = 0; k < n_dims; ++k)
-				dot = W[j*n_dims + k] * embedding[i*n_dims + k];
+				dot += W[j*n_dims + k] * embedding[i*n_dims + k];
 
 			/* bits are grouped by pack of (sizeof(long)). Add
 			 * current bit to current group */
