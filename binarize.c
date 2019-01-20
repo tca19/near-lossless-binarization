@@ -202,10 +202,9 @@ void apply_regularizarion_gradient(float *W, int m, int n, float lr_reg)
 /* transform the real-value word vectors of `embedding` into binary vectors */
 unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 {
-	float *W, *C;
-	float dot, lr_reg;
+	float *latent, *W, *C, lr_reg;
 	unsigned long *binary_vector, bits_group;
-	int i, j, k, n_long, batch_size;
+	int i, j, n_long, batch_size;
 
 	/* W is a (n_bits, n_dims) matrix, C is a (n_dims) vector */
 	srand(0);
@@ -233,23 +232,29 @@ unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 	 * binary vector is an array of 4 `long` (4 * 64 = 256). The bit
 	 * representation of each long are the bits of the vectors. */
 	n_long = n_bits / (sizeof(long) * 8);
+	latent = calloc(n_vecs * n_bits, sizeof *latent);
+	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
+	            n_vecs, n_bits, n_dims,
+	            1, embedding, n_dims, W, n_dims,
+	            0, latent, n_bits);
+
 	binary_vector = calloc(n_vecs * n_long, sizeof *binary_vector);
 	for (i = 0; i < n_vecs; ++i)         /* for each word */
 	{
 		bits_group = 0;
 		for (j = 0; j < n_bits; ++j) /* for each bit */
 		{
-			/* compute dot product between j-th line of W and the
-			 * vector of i-th word. The sign of dot product
-			 * determines if bit is 0 or 1 */
-			dot = 0;
-			for (k = 0; k < n_dims; ++k)
-				dot += W[j*n_dims + k] * embedding[i*n_dims + k];
+			/* the j-th bit of the i-th word is determined by the
+			 * sign of the j-th value of the latent representation
+			 * of the i-th embedding vector. This latent
+			 * representation is the dot product between the
+			 * original embedding and W. It has already been
+			 * computed and stored in latent[i][j]. */
 
 			/* bits are grouped by pack of (sizeof(long)). Add
 			 * current bit to current group */
 			bits_group <<= 1;
-			bits_group |= (dot > 0);
+			bits_group |= (latent[i*n_bits + j] > 0);
 
 			/* bits_group has enough bits to form a long, write it
 			 * to the binary vector matrix and reset it */
