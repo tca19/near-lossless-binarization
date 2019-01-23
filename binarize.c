@@ -203,7 +203,7 @@ void apply_regularizarion_gradient(float *W, int m, int n, float lr_reg)
  * weights of W and C. `embedding` should not be the whole embedding matrix, but
  * the embedding matrix of the batch, so dimension should be (batch_size,n). */
 void apply_reconstruction_gradient(float *W, float *C, float *embedding,
-		                   int m, int n, int batch_size)
+		                   int m, int n, int batch_size, float lr_rec)
 {
 	float *latent, *x_hat, *dldC, *dldW, v;
 	int i, j;
@@ -260,6 +260,16 @@ void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 	            1, W, batch_size, latent, n,
 	            0, dldW, n);
 
+	/* update weights of W */
+	for (i = 0; i < m * n; ++i)
+		W[i] -= lr_rec * dldW[i];
+
+	/* update weight of C. dldC is a (batch_size,n) matrix. Each weights
+	 * C[i] is updated with the sum of the column i in dldC */
+	for (i = 0; i < batch_size; ++i)
+		for (j = 0; j < n; ++j)
+			C[j] -= lr_rec * dldC[i*n + j];
+
 	free(latent);
 	free(x_hat);
 	free(dldC);
@@ -269,7 +279,7 @@ void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 /* transform the real-value word vectors of `embedding` into binary vectors */
 unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 {
-	float *latent, *W, *C, lr_reg;
+	float *latent, *W, *C, lr_reg, lr_rec;
 	unsigned long *binary_vector, bits_group;
 	int i, j, n_long, batch_size;
 
@@ -279,6 +289,7 @@ unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 	C = random_array(n_dims);
 
 	lr_reg = 0.001;
+	lr_rec = 0.001;
 	batch_size = 75;
 	for (i = 0; i < 5; ++i) /* for each iteration */
 	{
@@ -286,15 +297,18 @@ unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 		{
 			apply_regularizarion_gradient(W, n_bits, n_dims, lr_reg);
 			apply_reconstruction_gradient(W, C, embedding+j,
-			                              n_bits, n_dims, batch_size);
+			                              n_bits, n_dims, batch_size, lr_rec);
 		}
 
 		if (j != n_vecs) /* process remaining vectors not in batch */
 		{
 			apply_regularizarion_gradient(W, n_bits, n_dims, lr_reg);
 			apply_reconstruction_gradient(W, C, embedding+j,
-			                              n_bits, n_dims, n_vecs-j);
+			                              n_bits, n_dims, n_vecs-j, lr_rec);
 		}
+
+		lr_rec *= 0.95;
+		lr_reg *= 0.95;
 	}
 
 	/* compute the binary vectors with the original embedding and W. Each
