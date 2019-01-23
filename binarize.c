@@ -205,11 +205,11 @@ void apply_regularizarion_gradient(float *W, int m, int n, float lr_reg)
 void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 		                   int m, int n, int batch_size)
 {
-	float *latent, *x_hat, *dldC, v;
+	float *latent, *x_hat, *dldC, *dldW, v;
 	int i, j;
 
 	/* latent = bin(W.embedding') where x is the stacked vectors of the
-	 * batch.  W is a (m,n) matrix, embedding is a (batch_size,n) matrix, so
+	 * batch. W is a (m,n) matrix, embedding is a (batch_size,n) matrix, so
 	 * latent is a (m,batch_size) matrix. */
 	latent = calloc(m * batch_size, sizeof *latent);
 
@@ -245,13 +245,25 @@ void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 	for (i = 0; i < batch_size; ++i)
 		for (j = 0; j < n; ++j)
 		{
-			v = x_hat[j*batch_size + i];
+			v = x_hat[j*batch_size + i]; /* = x_hat'[i][j] */
 			dldC[i*n + j] = (v - embedding[i*n + j]) * (1 - v*v);
 		}
+
+	/* dldW = latent.dldC;
+	 * latent is a (m,batch_size) matrix, dldC is a (batch_size,n) so dldW
+	 * is a (m,n) matrix (like W). */
+	dldW = calloc(m * n, sizeof *dldW);
+
+	/* compute dldW = latent.dldC */
+	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+	            m, n, batch_size,
+	            1, W, batch_size, latent, n,
+	            0, dldW, n);
 
 	free(latent);
 	free(x_hat);
 	free(dldC);
+	free(dldW);
 }
 
 /* transform the real-value word vectors of `embedding` into binary vectors */
