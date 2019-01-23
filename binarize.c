@@ -199,6 +199,33 @@ void apply_regularizarion_gradient(float *W, int m, int n, float lr_reg)
 	return;
 }
 
+/* compute the gradients of the reconstruction loss w.r.t W and C, update the
+ * weights of W and C. `embedding` should not be the whole embedding matrix, but
+ * the embedding matrix of the batch, so dimension should be (batch_size,n). */
+void apply_reconstruction_gradient(float *W, float *C, float *embedding,
+		                   int m, int n, int batch_size)
+{
+	float *latent;
+	int i;
+
+	/* latent = bin(W.embedding') where x is the stacked vectors of the
+	 * batch.  W is a (m,n) matrix, embedding is a (batch_size,n) matrix, so
+	 * latent is a (m,batch_size) matrix. */
+	latent = calloc(m * batch_size, sizeof *latent);
+
+	/* compute latent = W.embedding' */
+	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
+	            m, batch_size, n,
+	            1, W, n, embedding, n,
+	            0, latent, batch_size);
+
+	/* compute latent = bin(latent) (negative values -> 0; positive -> 1) */
+	for (i = 0; i < m * batch_size; ++i)
+		latent[i] = (latent[i] > 0) ? 1.0 : 0.0;
+
+	free(latent);
+}
+
 /* transform the real-value word vectors of `embedding` into binary vectors */
 unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 {
@@ -212,17 +239,21 @@ unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 	C = random_array(n_dims);
 
 	lr_reg = 0.001;
-	batch_size = 100;
+	batch_size = 75;
 	for (i = 0; i < 5; ++i) /* for each iteration */
 	{
 		for (j = 0; j + batch_size - 1 < n_vecs; j += batch_size)
 		{
 			apply_regularizarion_gradient(W, n_bits, n_dims, lr_reg);
+			apply_reconstruction_gradient(W, C, embedding+j,
+			                              n_bits, n_dims, batch_size);
 		}
 
 		if (j != n_vecs) /* process remaining vectors not in batch */
 		{
 			apply_regularizarion_gradient(W, n_bits, n_dims, lr_reg);
+			apply_reconstruction_gradient(W, C, embedding+j,
+			                              n_bits, n_dims, n_vecs-j);
 		}
 	}
 
