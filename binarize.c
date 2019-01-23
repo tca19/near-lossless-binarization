@@ -166,7 +166,7 @@ float *random_array(long size)
 	return ar;
 }
 
-/* compute the gradient of the regularization w.r.t W, update weigths of W */
+/* compute the gradient of the regularization w.r.t. W, update weigths of W */
 void apply_regularizarion_gradient(float *W, int m, int n, float lr_reg)
 {
 	float *T, *copy;
@@ -205,7 +205,7 @@ void apply_regularizarion_gradient(float *W, int m, int n, float lr_reg)
 void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 		                   int m, int n, int batch_size)
 {
-	float *latent;
+	float *latent, *x_hat;
 	int i;
 
 	/* latent = bin(W.embedding') where x is the stacked vectors of the
@@ -213,15 +213,30 @@ void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 	 * latent is a (m,batch_size) matrix. */
 	latent = calloc(m * batch_size, sizeof *latent);
 
-	/* compute latent = W.embedding' */
+	/* compute latent = bin(W.embedding'). bin() is a function that maps
+	 * negative values to 0 and positive values to 1. */
 	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans,
 	            m, batch_size, n,
 	            1, W, n, embedding, n,
 	            0, latent, batch_size);
-
-	/* compute latent = bin(latent) (negative values -> 0; positive -> 1) */
 	for (i = 0; i < m * batch_size; ++i)
 		latent[i] = (latent[i] > 0) ? 1.0 : 0.0;
+
+	/* x_hat = tanh(W'.latent + C);
+	 * W' is a (n,m) matrix, latent is a (m,batch_size) matrix so x_hat is a
+	 * (n,batch_size) matrix. C is a (n) vector and is column broadcasted.
+	 * (as if C were added to each column of W'.latent) */
+	x_hat = calloc(n * batch_size, sizeof *x_hat);
+
+	/* compute x_hat = W'.latent */
+	cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans,
+	            n, batch_size, m,
+	            1, W, n, latent, batch_size,
+	            0, x_hat, batch_size);
+
+	/* compute x_hat = tanh(x_hat + C) */
+	for (i = 0; i < n * batch_size; ++i)
+		x_hat[i] = tanh(x_hat[i] + C[i / n]);
 
 	free(latent);
 }
