@@ -205,8 +205,8 @@ void apply_regularizarion_gradient(float *W, int m, int n, float lr_reg)
 void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 		                   int m, int n, int batch_size)
 {
-	float *latent, *x_hat;
-	int i;
+	float *latent, *x_hat, *dldC, v;
+	int i, j;
 
 	/* latent = bin(W.embedding') where x is the stacked vectors of the
 	 * batch.  W is a (m,n) matrix, embedding is a (batch_size,n) matrix, so
@@ -238,7 +238,20 @@ void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 	for (i = 0; i < n * batch_size; ++i)
 		x_hat[i] = tanh(x_hat[i] + C[i / n]);
 
+	/* dldC = (x_hat' - x) * (1 - x_hat'**2)
+	 * No BLAS subroutines implement element-wise matrices substraction,
+	 * have to do it manually. */
+	dldC = calloc(batch_size * n, sizeof *dldC);
+	for (i = 0; i < batch_size; ++i)
+		for (j = 0; j < n; ++j)
+		{
+			v = x_hat[j*batch_size + i];
+			dldC[i*n + j] = (v - embedding[i*n + j]) * (1 - v*v);
+		}
+
 	free(latent);
+	free(x_hat);
+	free(dldC);
 }
 
 /* transform the real-value word vectors of `embedding` into binary vectors */
