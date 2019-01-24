@@ -234,9 +234,18 @@ void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 	            1, W, n, latent, batch_size,
 	            0, x_hat, batch_size);
 
-	/* compute x_hat = tanh(x_hat + C) */
+	/* compute x_hat = tanh(x_hat + C). Use the simplified version of tanh
+	 * for faster computations (-1 when x < -1; +1 when x > 1; id(x)
+	 * otherwise). The differences between tanh and the simplified version
+	 * are small; the influence on the binary vectors is negligible. */
 	for (i = 0; i < n * batch_size; ++i)
-		x_hat[i] = tanh(x_hat[i] + C[i / batch_size]);
+	{
+		x_hat[i] = x_hat[i] + C[i / batch_size];
+		if (x_hat[i] < -1.0)
+			x_hat[i] = -1.0;
+		else if (x_hat[i] > 1.0)
+			x_hat[i] = 1.0;
+	}
 
 	/* dldC = (x_hat' - x) * (1 - x_hat'**2)
 	 * No BLAS subroutines implement element-wise matrices substraction,
