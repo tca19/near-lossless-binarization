@@ -236,7 +236,7 @@ void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 
 	/* compute x_hat = tanh(x_hat + C) */
 	for (i = 0; i < n * batch_size; ++i)
-		x_hat[i] = tanh(x_hat[i] + C[i / n]);
+		x_hat[i] = tanh(x_hat[i] + C[i / batch_size]);
 
 	/* dldC = (x_hat' - x) * (1 - x_hat'**2)
 	 * No BLAS subroutines implement element-wise matrices substraction,
