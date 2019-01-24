@@ -296,15 +296,15 @@ unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 		for (j = 0; j + batch_size - 1 < n_vecs; j += batch_size)
 		{
 			apply_regularizarion_gradient(W, n_bits, n_dims, lr_reg);
-			apply_reconstruction_gradient(W, C, embedding+j,
-			                              n_bits, n_dims, batch_size, lr_rec);
+			apply_reconstruction_gradient(W, C, embedding+j*n_dims,
+			    n_bits, n_dims, batch_size, lr_rec);
 		}
 
 		if (j != n_vecs) /* process remaining vectors not in batch */
 		{
 			apply_regularizarion_gradient(W, n_bits, n_dims, lr_reg);
-			apply_reconstruction_gradient(W, C, embedding+j,
-			                              n_bits, n_dims, n_vecs-j, lr_rec);
+			apply_reconstruction_gradient(W, C, embedding+j*n_dims,
+			    n_bits, n_dims, n_vecs-j, lr_rec);
 		}
 
 		lr_rec *= 0.95;
