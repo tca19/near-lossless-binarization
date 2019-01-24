@@ -257,7 +257,7 @@ void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 	/* compute dldW = latent.dldC */
 	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
 	            m, n, batch_size,
-	            1, W, batch_size, latent, n,
+	            1, latent, batch_size, dldC, n,
 	            0, dldW, n);
 
 	/* update weights of W */
