@@ -205,7 +205,7 @@ void apply_regularizarion_gradient(float *W, int m, int n, float lr_reg)
 void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 		                   int m, int n, int batch_size, float lr_rec)
 {
-	float *latent, *x_hat, *dldC, *dldW, v;
+	float *latent, *x_hat, *dldC, v;
 	int i, j;
 
 	/* latent = bin(W.embedding') where x is the stacked vectors of the
@@ -249,20 +249,14 @@ void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 			dldC[i*n + j] = (v - embedding[i*n + j]) * (1 - v*v);
 		}
 
-	/* dldW = latent.dldC;
-	 * latent is a (m,batch_size) matrix, dldC is a (batch_size,n) so dldW
-	 * is a (m,n) matrix (like W). */
-	dldW = calloc(m * n, sizeof *dldW);
-
-	/* compute dldW = latent.dldC */
+	/* compute dldW = latent.dldC,  but since W is then updated with
+	 * W -= lr_rec * dldW, directly update the weights of W with the result
+	 * of the dot product (the function cblas_dgemm(A, B, C) performs the
+	 * matrix operation:  C = alpha * A.B + beta * C) */
 	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
 	            m, n, batch_size,
-	            1, latent, batch_size, dldC, n,
-	            0, dldW, n);
-
-	/* update weights of W */
-	for (i = 0; i < m * n; ++i)
-		W[i] -= lr_rec * dldW[i];
+	            -lr_rec, latent, batch_size, dldC, n,
+	            1, W, n);
 
 	/* update weight of C. dldC is a (batch_size,n) matrix. Each weights
 	 * C[i] is updated with the sum of the column i in dldC */
@@ -273,7 +267,6 @@ void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 	free(latent);
 	free(x_hat);
 	free(dldC);
-	free(dldW);
 }
 
 /* transform the real-value word vectors of `embedding` into binary vectors */
