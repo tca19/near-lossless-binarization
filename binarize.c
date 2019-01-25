@@ -279,9 +279,10 @@ void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 }
 
 /* transform the real-value word vectors of `embedding` into binary vectors */
-unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
+unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits,
+		        float lr_rec, float lr_reg)
 {
-	float *latent, *W, *C, lr_reg, lr_rec;
+	float *latent, *W, *C;
 	unsigned long *binary_vector, bits_group;
 	int i, j, n_long, batch_size;
 
@@ -290,8 +291,6 @@ unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits)
 	W = random_array(n_dims * n_bits);
 	C = random_array(n_dims);
 
-	lr_reg = 0.001;
-	lr_rec = 0.001;
 	batch_size = 75;
 	for (i = 0; i < 5; ++i) /* for each iteration */
 	{
@@ -457,12 +456,12 @@ int main(int argc, char *argv[])
 		}
 	}
 
-/*	real_vec = load_embedding(argv[argc-1], &words, &n_vecs, &n_dims);
-	bin_vec  = binarize(real_vec, n_vecs, n_dims, n_bits);
+	real_vec = load_embedding(input_filename, &words, &n_vecs, &n_dims);
+	bin_vec  = binarize(real_vec, n_vecs, n_dims, n_bits, lr_rec, lr_reg);
 	write_binary_vectors(output_filename, words, bin_vec, n_vecs, n_bits);
 
 	destroy_word_list(words, n_vecs);
 	free(real_vec); /* `real_vec` is created with a single calloc */
-/*	free(bin_vec);*/
+	free(bin_vec);
 	return 0;
 }
