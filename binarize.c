@@ -280,19 +280,18 @@ void apply_reconstruction_gradient(float *W, float *C, float *embedding,
 
 /* transform the real-value word vectors of `embedding` into binary vectors */
 unsigned long *binarize(float *embedding, long n_vecs, int n_dims, int n_bits,
-		        float lr_rec, float lr_reg)
+		        float lr_rec, float lr_reg, int batch_size, int n_iter)
 {
 	float *latent, *W, *C;
 	unsigned long *binary_vector, bits_group;
-	int i, j, n_long, batch_size;
+	int i, j, n_long;
 
 	/* W is a (n_bits, n_dims) matrix, C is a (n_dims) vector */
 	srand(0);
 	W = random_array(n_dims * n_bits);
 	C = random_array(n_dims);
 
-	batch_size = 75;
-	for (i = 0; i < 5; ++i) /* for each iteration */
+	for (i = 0; i < n_iter; ++i) /* for each iteration */
 	{
 		for (j = 0; j + batch_size - 1 < n_vecs; j += batch_size)
 		{
@@ -411,15 +410,23 @@ int main(int argc, char *argv[])
 	/* learning rate for reconstruction loss and regularization loss */
 	float lr_rec, lr_reg;
 
+	/* number of vectors in each batch */
+	int batch_size;
+
+	/* number of training epoch */
+	int epoch;
+
 	/* set the default parameters */
 	strcpy(input_filename,  "");
 	strcpy(output_filename, "binary_vectors.vec");
-	words    = NULL;
-	real_vec = NULL;
-	bin_vec  = NULL;
-	n_bits   = 256;
-	lr_rec   = 0.001f;
-	lr_reg   = 0.001f;
+	words      = NULL;
+	real_vec   = NULL;
+	bin_vec    = NULL;
+	n_bits     = 256;
+	lr_rec     = 0.001f;
+	lr_reg     = 0.001f;
+	batch_size = 75;
+	epoch      = 5;
 
 	/* parse command line arguments */
 	for (++argv, --argc; argc != 0; --argc, ++argv)
@@ -449,6 +456,16 @@ int main(int argc, char *argv[])
 			lr_reg = atof(*++argv);
 			--argc; /* one more argument has been used */
 		}
+		else if (strcmp(*argv, "-batch-size") == 0 && argc > 1)
+		{
+			batch_size = atoi(*++argv);
+			--argc; /* one more argument has been used */
+		}
+		else if (strcmp(*argv, "-epoch") == 0 && argc > 1)
+		{
+			epoch = atoi(*++argv);
+			--argc; /* one more argument has been used */
+		}
 		else
 		{
 			fprintf(stderr, "main: can't parse argument %s "
@@ -457,7 +474,8 @@ int main(int argc, char *argv[])
 	}
 
 	real_vec = load_embedding(input_filename, &words, &n_vecs, &n_dims);
-	bin_vec  = binarize(real_vec, n_vecs, n_dims, n_bits, lr_rec, lr_reg);
+	bin_vec  = binarize(real_vec, n_vecs, n_dims, n_bits, lr_rec, lr_reg,
+	                    batch_size, epoch);
 	write_binary_vectors(output_filename, words, bin_vec, n_vecs, n_bits);
 
 	destroy_word_list(words, n_vecs);
