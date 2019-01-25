@@ -390,18 +390,43 @@ void write_binary_vectors(char *filename, char **words,
 
 int main(int argc, char *argv[])
 {
+	/* filenames of input/output files */
+	char input_filename[MAXWORDLEN], output_filename[MAXWORDLEN];
+
+	/* array containing all words of input file */
 	char **words;
-	float *embedding;
-	unsigned long *binary_vector;
+
+	/* real value vectors (matrix stored as a 1D array) */
+	float *real_vec;
+
+	/* binary vectors (matrix stored as a 1D array) */
+	unsigned long *bin_vec;
+
+	/* number of words vectors in input file and their dimension */
 	long n_vecs;
 	int n_dims;
 
-	embedding = load_embedding(argv[argc-1], &words, &n_vecs, &n_dims);
-	binary_vector = binarize(embedding, n_vecs, n_dims, 256);
-	write_binary_vectors("output", words, binary_vector, n_vecs, 256);
+	/* number of bits each binary vector should have */
+	int n_bits;
+
+	/* learning rate for reconstruction loss and regularization loss */
+	float lr_rec, lr_reg;
+
+	/* set the default parameters */
+	strcpy(output_filename, "binary_vectors.vec");
+	words    = NULL;
+	real_vec = NULL;
+	bin_vec  = NULL;
+	n_bits   = 256;
+	lr_rec   = 0.001f;
+	lr_reg   = 0.001f;
+
+	real_vec = load_embedding(argv[argc-1], &words, &n_vecs, &n_dims);
+	bin_vec  = binarize(real_vec, n_vecs, n_dims, n_bits);
+	write_binary_vectors(output_filename, words, bin_vec, n_vecs, n_bits);
 
 	destroy_word_list(words, n_vecs);
-	free(embedding); /* `embedding` is created with a single calloc */
-	free(binary_vector);
+	free(real_vec); /* `real_vec` is created with a single calloc */
+	free(bin_vec);
 	return 0;
 }
