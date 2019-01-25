@@ -469,8 +469,16 @@ int main(int argc, char *argv[])
 		else
 		{
 			fprintf(stderr, "main: can't parse argument %s "
-			  "(unknown parameter or no value given)\n", *argv);
+			  "(unknown parameter or no value given).\n", *argv);
 		}
+	}
+
+	/* can't train anything without input vectors */
+	if (strlen(input_filename) == 0)
+	{
+		fprintf(stderr, "main: can't train the model without the "
+		        "parameter: -input <file>.\n");
+		exit(1);
 	}
 
 	real_vec = load_embedding(input_filename, &words, &n_vecs, &n_dims);
