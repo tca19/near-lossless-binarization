@@ -435,6 +435,21 @@ int main(int argc, char *argv[])
 			strncpy(output_filename, *++argv, MAXWORDLEN);
 			--argc; /* one more argument has been used */
 		}
+		else if (strcmp(*argv, "-n-bits") == 0 && argc > 1)
+		{
+			n_bits = atoi(*++argv);
+			--argc; /* one more argument has been used */
+		}
+		else if (strcmp(*argv, "-lr-rec") == 0 && argc > 1)
+		{
+			lr_rec = atof(*++argv);
+			--argc; /* one more argument has been used */
+		}
+		else if (strcmp(*argv, "-lr-reg") == 0 && argc > 1)
+		{
+			lr_reg = atof(*++argv);
+			--argc; /* one more argument has been used */
+		}
 		else
 		{
 			fprintf(stderr, "main: can't parse argument %s "
