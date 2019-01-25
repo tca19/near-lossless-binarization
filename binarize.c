@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define MAXWORDLEN 128       /* buffer size when reading words of embedding */
+#define MAXWORDLEN 128      /* buffer size when reading words of embedding */
+
+int getc_unlocked(FILE *);
 
 /* read a word from ̣`fp` into `buffer`; read at most MAXWORDLEN characters */
 void read_word(FILE *fp, char **buffer)
