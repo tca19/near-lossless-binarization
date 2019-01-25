@@ -413,6 +413,7 @@ int main(int argc, char *argv[])
 	float lr_rec, lr_reg;
 
 	/* set the default parameters */
+	strcpy(input_filename,  "");
 	strcpy(output_filename, "binary_vectors.vec");
 	words    = NULL;
 	real_vec = NULL;
@@ -421,12 +422,32 @@ int main(int argc, char *argv[])
 	lr_rec   = 0.001f;
 	lr_reg   = 0.001f;
 
-	real_vec = load_embedding(argv[argc-1], &words, &n_vecs, &n_dims);
+	/* parse command line arguments */
+	for (++argv, --argc; argc != 0; --argc, ++argv)
+	{
+		if (strcmp(*argv, "-input") == 0 && argc > 1)
+		{
+			strncpy(input_filename, *++argv, MAXWORDLEN);
+			--argc; /* one more argument has been used */
+		}
+		else if (strcmp(*argv, "-output") == 0 && argc > 1)
+		{
+			strncpy(output_filename, *++argv, MAXWORDLEN);
+			--argc; /* one more argument has been used */
+		}
+		else
+		{
+			fprintf(stderr, "main: can't parse argument %s "
+			  "(unknown parameter or no value given)\n", *argv);
+		}
+	}
+
+/*	real_vec = load_embedding(argv[argc-1], &words, &n_vecs, &n_dims);
 	bin_vec  = binarize(real_vec, n_vecs, n_dims, n_bits);
 	write_binary_vectors(output_filename, words, bin_vec, n_vecs, n_bits);
 
 	destroy_word_list(words, n_vecs);
 	free(real_vec); /* `real_vec` is created with a single calloc */
-	free(bin_vec);
+/*	free(bin_vec);*/
 	return 0;
 }
