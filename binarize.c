@@ -388,6 +388,25 @@ void write_binary_vectors(char *filename, char **words,
 	fclose(fo);
 }
 
+/* print the help (command line flags documentation) */
+void print_help(void)
+{
+	printf(
+	"Near-lossless Binarization of Word Embeddings\n"
+	"Author: Julien Tissier <30314448+tca19@users.noreply.github.com>\n\n"
+	);
+
+	printf(
+	"OPTIONS\n"
+	"  -input <file>\n"
+	"  Filename containing the real-value embeddings to binarize\n\n"
+	"  -output <file>\n"
+	"  Save the binary vectors into <file>\n\n"
+	"  -n-bits <int>\n"
+	"  Number of bits in each binary vectors; default 256\n\n"
+	);
+}
+
 int main(int argc, char *argv[])
 {
 	/* filenames of input/output files */
@@ -433,6 +452,11 @@ int main(int argc, char *argv[])
 	/* parse command line arguments */
 	for (++argv, --argc; argc != 0; --argc, ++argv)
 	{
+		if (strcmp(*argv, "-h") == 0 || strcmp(*argv, "--help") == 0)
+		{
+			print_help();
+			exit(0);
+		}
 		if (strcmp(*argv, "-input") == 0 && argc > 1)
 		{
 			strncpy(input_filename, *++argv, MAXWORDLEN);
