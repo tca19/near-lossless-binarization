@@ -391,12 +391,12 @@ void write_binary_vectors(char *filename, char **words,
 /* print the help (command line flags documentation) */
 void print_help(void)
 {
-	printf(
+	puts(
 	"Near-lossless Binarization of Word Embeddings\n"
-	"Author: Julien Tissier <30314448+tca19@users.noreply.github.com>\n\n"
+	"Author: Julien Tissier <30314448+tca19@users.noreply.github.com>\n"
 	);
 
-	printf(
+	puts(
 	"OPTIONS\n"
 	"  -input <file>\n"
 	"    Filename containing the real-value embeddings to binarize\n\n"
@@ -411,13 +411,13 @@ void print_help(void)
 	"  -batch-size <int>\n"
 	"    Number of vectors per batch during training; default 75\n\n"
 	"  -epoch <int>\n"
-	"    Number of training epoch; default 5\n\n"
+	"    Number of training epoch; default 5\n"
 	);
 
-	printf(
+	puts(
 	"USAGE\n"
 	"  ./binarize -input vectors.vec -output binary_vectors.vec \\\n"
-	"  -n-bits 256 -lr-rec 0.001 -lr-reg 0.001 -batch-size 75 -epoch 5\n"
+	"  -n-bits 256 -lr-rec 0.001 -lr-reg 0.001 -batch-size 75 -epoch 5"
 	);
 }
 
