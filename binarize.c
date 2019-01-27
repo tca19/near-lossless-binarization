@@ -399,11 +399,19 @@ void print_help(void)
 	printf(
 	"OPTIONS\n"
 	"  -input <file>\n"
-	"  Filename containing the real-value embeddings to binarize\n\n"
+	"    Filename containing the real-value embeddings to binarize\n\n"
 	"  -output <file>\n"
-	"  Save the binary vectors into <file>\n\n"
+	"    Save the binary vectors into <file>\n\n"
 	"  -n-bits <int>\n"
-	"  Number of bits in each binary vectors; default 256\n\n"
+	"    Number of bits in each binary vectors; default 256\n\n"
+	"  -lr-rec <float>\n"
+	"    Learning rate for the reconstruction loss; default 0.001\n\n"
+	"  -lr-reg <float>\n"
+	"    Learning rate for the regularization; default 0.001\n\n"
+	"  -batch-size <int>\n"
+	"    Number of vectors per batch during training; default 75\n\n"
+	"  -epoch <int>\n"
+	"    Number of training epoch; default 5\n\n"
 	);
 }
 
