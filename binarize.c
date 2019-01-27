@@ -413,6 +413,12 @@ void print_help(void)
 	"  -epoch <int>\n"
 	"    Number of training epoch; default 5\n\n"
 	);
+
+	printf(
+	"USAGE\n"
+	"  ./binarize -input vectors.vec -output binary_vectors.vec \\\n"
+	"  -n-bits 256 -lr-rec 0.001 -lr-reg 0.001 -batch-size 75 -epoch 5\n"
+	);
 }
 
 int main(int argc, char *argv[])
