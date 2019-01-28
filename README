@@ -1,10 +1,21 @@
-# near-lossless-binarization
+                 Near-lossless Binarization of Word Embeddings
+                 =============================================
 
-**WORK IN PROGRESS**
+ABOUT
 
-Paper has been accepted at AAAI 2019. Final version can be found here:
-[https://arxiv.org/pdf/1803.09065.pdf](https://arxiv.org/pdf/1803.09065.pdf).
+  This repository contains source code to binarize any real-value word
+  embeddings into binary vectors. It also contains some scripts to evaluate the
+  performances of the binary vectors on semantic similarity tasks and top-k
+  queries. Related paper can be found at https://arxiv.org/pdf/1803.09065.pdf.
 
-For the moment, the repository only has scripts to evaluate binary word
-embeddings. The entire code to generate binary vectors will be available for the
-AAAI 2019 conference (January 27 -- February 1 2019).
+INSTALLATION
+
+  To compile the source files of this repository, you need to have on your
+  system:
+    - OpenBLAS [1]
+    - a C compiler (gcc, clang ...)
+    - make
+
+  Then run the command `make` to build the different binary executables.
+
+  [1] https://github.com/xianyi/OpenBLAS/wiki/Precompiled-installation-packages
