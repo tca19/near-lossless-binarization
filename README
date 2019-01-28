@@ -19,3 +19,30 @@ INSTALLATION
   Then run the command `make` to build the different binary executables.
 
   [1] https://github.com/xianyi/OpenBLAS/wiki/Precompiled-installation-packages
+
+USAGE
+
+  1. Binarize word vectors
+    Run the executable `binarize` to transform real-value embeddings into binary
+    vectors. The only mandatory command line flag is `-input`, the filename
+    containing the real-value vectors.
+
+    ./binarize -input vectors.vec
+
+    All the other existing flags documentation can be found with `./binarize -h`
+    or `./binarize --help`
+
+  2. Evaluate semantic similarity
+    Run the executable `similarity_binary` to evaluate the semantic similarity
+    correlation scores of the produced binary vectors.
+
+    ./similarity_binary binary_vectors.vec
+
+    This repository includes some semantic similarity datasets:
+      - MEN
+      - Rare Word (RW)
+      - SimVerb 3500 (SimVerb)
+      - SimLex 999 (SimLex)
+      - WordSim 353 (WS353)
+    To evaluate on other semantic similarity datasets, simply add them into
+    the datasets/ folder and run again the `./similarity_binary` executable.
