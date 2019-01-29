@@ -2,7 +2,7 @@ CC      = gcc
 CFLAGS  = -ansi -pedantic -lm -pthread -Ofast -funroll-loops -lblas
 CFLAGS += -Wall -Wextra -Wno-unused-result
 
-all: binarize similarity_binary
+all: binarize similarity_binary topk_binary
 
 binarize: binarize.c
 	$(CC) $(CFLAGS) binarize.c -o binarize
@@ -10,6 +10,9 @@ binarize: binarize.c
 similarity_binary: similarity_binary.o hashtab.o spearman.o file_process.o
 	$(CC) $(CFLAGS) similarity_binary.o hashtab.o spearman.o file_process.o \
 	-o similarity_binary
+
+topk_binary: topk_binary.c
+	$(CC) $(CFLAGS) topk_binary.c -o topk_binary
 
 similarity_binary.o: similarity_binary.c utils.h
 	$(CC) $(CFLAGS) -c similarity_binary.c
@@ -24,4 +27,4 @@ file_process.o: file_process.c
 	$(CC) $(CFLAGS) -c file_process.c
 
 clean:
-	-rm *.o binarize similarity_binary
+	-rm *.o binarize similarity_binary topk_binary
