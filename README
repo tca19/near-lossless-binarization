@@ -63,3 +63,6 @@ USAGE
 
   ./topk_binary binary_vectors.vec 10 queen automobile man moon computer
 
+AUTHOR
+
+  Written by Julien Tissier <30314448+tca19@users.noreply.github.com>.
