@@ -3,66 +3,67 @@
 
 ABOUT
 
-  This repository contains source code to binarize any real-value word
-  embeddings into binary vectors. It also contains some scripts to evaluate the
-  performances of the binary vectors on semantic similarity tasks and top-k
-  queries. Related paper can be found at https://arxiv.org/pdf/1803.09065.pdf.
+	This repository contains source code to binarize any real-value word
+	embeddings into binary vectors. It also contains some scripts to
+	evaluate the performances of the binary vectors on semantic similarity
+	tasks and top-k queries. Related paper can be found at
+	https://arxiv.org/pdf/1803.09065.pdf.
 
 INSTALLATION
 
-  To compile the source files of this repository, you need to have on your
-  system:
-    - OpenBLAS [1]
-    - a C compiler (gcc, clang ...)
-    - make
+	To compile the source files of this repository, you need to have on your
+	system:
+	  - OpenBLAS [1]
+	  - a C compiler (gcc, clang ...)
+	  - make
 
-  Then run the command `make` to build the different binary executables.
+	Then run the command `make` to build the different binary executables.
 
-  [1] https://github.com/xianyi/OpenBLAS/wiki/Precompiled-installation-packages
+	[1] https://github.com/xianyi/OpenBLAS/wiki/Precompiled-installation-packages
 
 USAGE
 
-  1. Binarize word vectors
-  ------------------------
-  Run the executable `binarize` to transform real-value embeddings into binary
-  vectors. The only mandatory command line argument is `-input`, the filename
-  containing the real-value vectors.
+	1. Binarize word vectors
+	------------------------
+	Run the executable `binarize` to transform real-value embeddings into
+	binary vectors. The only mandatory command line argument is `-input`,
+	the filename containing the real-value vectors.
 
-  ./binarize -input vectors.vec
+	./binarize -input vectors.vec
 
-  All the other existing flags documentation can be found with `./binarize -h`
-  or `./binarize --help`
+	All the other existing flags documentation can be found with
+	`./binarize -h` or `./binarize --help`
 
-  2. Evaluate semantic similarity
-  -------------------------------
-  Run the executable `similarity_binary` to evaluate the semantic similarity
-  correlation scores of the produced binary vectors.
+	2. Evaluate semantic similarity
+	-------------------------------
+	Run the executable `similarity_binary` to evaluate the semantic
+	similarity correlation scores of the produced binary vectors.
 
-  ./similarity_binary binary_vectors.vec
+	./similarity_binary binary_vectors.vec
 
-  This repository includes some semantic similarity datasets:
-    - MEN
-    - Rare Word (RW)
-    - SimVerb 3500 (SimVerb)
-    - SimLex 999 (SimLex)
-    - WordSim 353 (WS353)
-  To evaluate on other semantic similarity datasets, simply add them into the
-  datasets/ folder and run again the `./similarity_binary` executable.
+	This repository includes some semantic similarity datasets:
+	  - MEN
+	  - Rare Word (RW)
+	  - SimVerb 3500 (SimVerb)
+	 - SimLex 999 (SimLex)
+	  - WordSim 353 (WS353)
+	To evaluate on other semantic similarity datasets, simply add them into
+	the datasets/ folder and run again the `./similarity_binary` executable.
 
-  3. Top-K queries
-  ----------------
-  Run the executable `topk_binary` to compute the K closest neighbors words and
-  their respective similarity to a QUERY word.
+	3. Top-K queries
+	----------------
+	Run the executable `topk_binary` to compute the K closest neighbors
+	words and their respective similarity to a QUERY word.
 
-  ./topk_binary binary_vectors.vec K QUERY
+	./topk_binary binary_vectors.vec K QUERY
 
-  The script will report the closest words and their similarity, as well as the
-  time needed to compute the K closest neighbors. You can also run multiple
-  top-k queries at the same time, simply replace the QUERY word with a list of
-  space separated words, like:
+	The script will report the closest words and their similarity, as well
+	as the time needed to compute the K closest neighbors. You can also run
+	multiple top-k queries at the same time, simply replace the QUERY word
+	with a list of space separated words, like:
 
-  ./topk_binary binary_vectors.vec 10 queen automobile man moon computer
+	./topk_binary binary_vectors.vec 10 queen automobile man moon computer
 
 AUTHOR
 
-  Written by Julien Tissier <30314448+tca19@users.noreply.github.com>.
+	Written by Julien Tissier <30314448+tca19@users.noreply.github.com>.
