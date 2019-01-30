@@ -45,7 +45,7 @@ USAGE
 	  - MEN
 	  - Rare Word (RW)
 	  - SimVerb 3500 (SimVerb)
-	 - SimLex 999 (SimLex)
+	  - SimLex 999 (SimLex)
 	  - WordSim 353 (WS353)
 	To evaluate on other semantic similarity datasets, simply add them into
 	the datasets/ folder and run again the `./similarity_binary` executable.
