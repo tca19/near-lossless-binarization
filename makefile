@@ -25,7 +25,7 @@ CFLAGS += -Wall -Wextra -Wno-unused-result
 all: binarize similarity_binary topk_binary
 
 binarize: binarize.c
-	$(CC) $(CFLAGS) binarize.c -o binarize
+	$(CC) binarize.c -o binarize $(CFLAGS)
 
 similarity_binary: similarity_binary.o hashtab.o spearman.o file_process.o
 	$(CC) $(CFLAGS) similarity_binary.o hashtab.o spearman.o file_process.o \
