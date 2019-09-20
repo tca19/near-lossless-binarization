@@ -19,20 +19,22 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 CC      = gcc
-CFLAGS  = -ansi -pedantic -lm -pthread -Ofast -funroll-loops -lblas
-CFLAGS += -Wall -Wextra -Wno-unused-result
+CFLAGS  = -g -Wall -Wextra -Wno-unused-result
+LDLIBS  = -lblas -lm
 
 all: binarize similarity_binary topk_binary
 
+# who depends on cblas library (-lblas) ? -- only binarize.c
+# who depends on math library (-lm) ? -- only spearman.c and binarize.c
 binarize: binarize.c
-	$(CC) binarize.c -o binarize $(CFLAGS)
+	$(CC) binarize.c -o binarize $(CFLAGS) $(LDLIBS)
 
+# $^ is a shortcut that means 'all the prerequisites'
 similarity_binary: similarity_binary.o hashtab.o spearman.o file_process.o
-	$(CC) $(CFLAGS) similarity_binary.o hashtab.o spearman.o file_process.o \
-	-o similarity_binary
+	$(CC) $^ -o similarity_binary $(CFLAGS) $(LDLIBS)
 
 topk_binary: topk_binary.c
-	$(CC) $(CFLAGS) topk_binary.c -o topk_binary
+	$(CC) topk_binary.c -o topk_binary $(CFLAGS)
 
 similarity_binary.o: similarity_binary.c utils.h
 	$(CC) $(CFLAGS) -c similarity_binary.c
