@@ -24,8 +24,8 @@ LDLIBS  = -lblas -lm
 
 all: binarize similarity_binary topk_binary
 
-# who depends on cblas library (-lblas) ? -- only binarize.c
-# who depends on math library (-lm) ? -- only spearman.c and binarize.c
+# who depends on cblas library (-lblas) ? only binarize.c
+# who depends on math library (-lm) ? binarize.c and spearman.c (so spearman.o)
 binarize: binarize.c
 	$(CC) binarize.c -o binarize $(CFLAGS) $(LDLIBS)
 
@@ -35,18 +35,6 @@ similarity_binary: similarity_binary.o hashtab.o spearman.o file_process.o
 
 topk_binary: topk_binary.c
 	$(CC) topk_binary.c -o topk_binary $(CFLAGS)
-
-similarity_binary.o: similarity_binary.c utils.h
-	$(CC) $(CFLAGS) -c similarity_binary.c
-
-hashtab.o: hashtab.c utils.h
-	$(CC) $(CFLAGS) -c hashtab.c
-
-spearman.o: spearman.c
-	$(CC) $(CFLAGS) -c spearman.c
-
-file_process.o: file_process.c
-	$(CC) $(CFLAGS) -c file_process.c
 
 clean:
 	-rm *.o binarize similarity_binary topk_binary
