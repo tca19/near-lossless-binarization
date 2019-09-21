@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define MAXWORDLEN 128      /* buffer size when reading words of embedding */
+#define MAXWORDLEN 256      /* buffer size when reading words of embedding */
 
 int getc_unlocked(FILE *);
 
