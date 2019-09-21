@@ -494,12 +494,21 @@ int main(int argc, char *argv[])
 		}
 		if (strcmp(*argv, "-input") == 0 && argc > 1)
 		{
-			strncpy(input_filename, *++argv, MAXWORDLEN);
+			/* copy up to MAXWORDLEN-1 characteres in case the input
+			 * filename is too long. `strncpy` does not append the
+			 * null character, so need space to add it manually. */
+			strncpy(input_filename, *++argv, MAXWORDLEN-1);
+			input_filename[MAXWORDLEN-1] = '\0';
 			--argc; /* one more argument has been used */
 		}
 		else if (strcmp(*argv, "-output") == 0 && argc > 1)
 		{
-			strncpy(output_filename, *++argv, MAXWORDLEN);
+			/* copy up to MAXWORDLEN-1 characteres in case the
+			 * output filename is too long. `strncpy` does not
+			 * append the null character, so need space to add it
+			 * manually. */
+			strncpy(output_filename, *++argv, MAXWORDLEN-1);
+			output_filename[MAXWORDLEN-1] = '\0';
 			--argc; /* one more argument has been used */
 		}
 		else if (strcmp(*argv, "-n-bits") == 0 && argc > 1)
