@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 CC      = gcc
-CFLAGS  = -g -Wall -Wextra -Wno-unused-result
+CFLAGS  = -ansi -pedantic -Wall -Wextra -Wno-unused-result -Ofast -funroll-loops
 LDLIBS  = -lblas -lm
 
 all: binarize similarity_binary topk_binary
