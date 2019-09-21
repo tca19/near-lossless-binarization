@@ -25,9 +25,9 @@
 #include <string.h> /* strcpy, strcmp, strcat */
 #include "utils.h"
 
-#define MAXLINES   3500
-#define MAXLENPATH 64
-#define MAXLENWORD 64
+#define MAXLINES   5000 /* maximul number of pairs in an evaluation dataset */
+#define MAXLENPATH 256  /* maximum length to access an evaluation dataset */
+#define MAXLENWORD 256  /* maximum length of a word in an embedding file */
 
 /* create_vocab: read each file in dirname to create vocab of unique words */
 void create_vocab(const char *dirname)
