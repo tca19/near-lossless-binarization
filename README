@@ -34,6 +34,18 @@ USAGE
 	All the other existing flags documentation can be found with
 	`./binarize -h` or `./binarize --help`
 
+    The binary vectors are saved by default into the file `binary_vectors.vec`.
+    The first line of this file indicates the number of binary word vectors and
+    the number of bits in each vector. Each following line are formatted like:
+
+    WORD INTEGER_1 INTEGER_2 [...]
+
+    The binary vectors are not saved as strings of zeros (0) and ones (1) but as
+    groups of unsigned long integers. Each integer represents 64 bits so for a
+    binary vector of 256 bits, there are 4 integers (4 * 64 = 256). The binary
+    vector of a word is the concatenation of the binary representations of all
+    the integers on the rest of its line.
+
 	2. Evaluate semantic similarity
 	-------------------------------
 	Run the executable `similarity_binary` to evaluate the semantic
