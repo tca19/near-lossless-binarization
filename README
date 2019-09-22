@@ -7,7 +7,22 @@ ABOUT
 	embeddings into binary vectors. It also contains some scripts to
 	evaluate the performances of the binary vectors on semantic similarity
 	tasks and top-k queries. Related paper can be found at
-	https://arxiv.org/pdf/1803.09065.pdf.
+	https://aaai.org/ojs/index.php/AAAI/article/view/4692/4570.
+
+	If you use this repository, please cite:
+
+	@inproceedings{tissier2019near,
+	  author    = {Tissier, Julien and Gravier, Christophe and Habrard, Amaury},
+	  title     = {Near-Lossless Binarization of Word Embeddings},
+	  booktitle = {Proceedings of the Thirty-Third {AAAI} Conference on
+	               Artificial Intelligence, Honolulu, Hawaii, USA,
+	               January 27 - February 1, 2019.},
+	  volume    = {33},
+	  pages     = {7104--7111},
+	  year      = {2019},
+	  url       = {https://aaai.org/ojs/index.php/AAAI/article/view/4692},
+	  doi       = {10.1609/aaai.v33i01.33017104}
+	}
 
 INSTALLATION
 
