@@ -105,6 +105,7 @@ float *load_embedding(const char *filename, char ***words,
 		      long *n_vecs, int *n_dims)
 {
 	int i;
+	char c;
 	long index;
 	FILE *fp;                  /* to open the vector file */
 	float *vec;                /* to store the word vectors */
@@ -143,10 +144,28 @@ float *load_embedding(const char *filename, char ***words,
 		exit(1);
 	}
 
-	/* start reading the word and vector values */
+	/* Start reading the word and vector values. */
 	index = 0;
-	while (!feof(fp))
+	while (index < *n_vecs) /* Stop when enough vectors have been loaded. */
 	{
+		/* Sometimes, for some word embedding files, after reading the
+		 * last value of the last line, the end-of-file indicator is not
+		 * set. According to the documentation of feof():
+		 *   "Notice that stream's internal position indicator may point
+		 *   to the end-of-file for the next operation, but still, the
+		 *   end-of-file indicator may not be set until an operation
+		 *   attempts to read at that point."
+		 * So I make sure that EOF is not reached by reading a char. */
+		c = getc_unlocked(fp);
+		if (c == EOF)
+		{
+			fprintf(stderr, "load_embedding: EOF reached. Only %ld "
+			        "vectors loaded (first line of %s indicates "
+			        "there are %ld vectors).\n", index, filename,
+			        *n_vecs);
+			exit(1);
+		}
+		ungetc(c, fp); /* there is no unlocked version of ungetc() */
 		read_word(fp, *words + index);
 		for (i = *n_dims * index; i < *n_dims * (index+1); ++i)
 			vec[i] = read_float(fp);
