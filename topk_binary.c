@@ -25,7 +25,7 @@
 #include <time.h>
 
 #define HASHSIZE   1000000
-#define MAXLENWORD 64
+#define MAXLENWORD 1024
 
 struct nlist
 {
