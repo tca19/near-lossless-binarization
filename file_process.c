@@ -80,9 +80,9 @@ unsigned long **load_binary_vectors(const char *name, long *n_vecs,
 {
 	int i;
 	long index;
-	FILE *fp;                /* to open vector file */
-	char word[MAXLENWORD];   /* to read the word of each line in file */
-	unsigned long **vec;     /* to store the binary embeddings */
+	FILE *fp;                  /* to open vector file */
+	char word[MAXLENWORD];     /* to read the word of each line in file */
+	unsigned long **vec, tmp;  /* to store the binary embeddings values */
 
 	if ((fp = fopen(name, "r")) == NULL)
 	{
@@ -97,14 +97,31 @@ unsigned long **load_binary_vectors(const char *name, long *n_vecs,
 	}
 
 	*n_long = *n_bits / (sizeof(long) * 8);
-	if ((vec = calloc(word_index + 1, sizeof *vec)) == NULL)
+	if ((vec = calloc(*n_vecs, sizeof *vec)) == NULL)
 		return NULL;
 
 	while (fscanf(fp, "%s", word) > 0)
 	{
-		index = get_index(word);
-		if (index == -1)    /* drop the words not in vocab */
-			continue;
+		/* Word vector has already been loaded, skip it. To skip it,
+		 * read all its vector values into the garbage variable `tmp` */
+		if (get_index(word) > 0)
+		{
+			for (i = 0; i < *n_long; ++i)
+				fscanf(fp, "%lu", &tmp);
+		}
+
+		/* Else, its index is -1 (not in the hashtab). Add the word
+		 * into the hashtab, to know that we have loaded its vector */
+		else
+		{
+			/* its index is set to word_index (variable from
+			 * hashtab.c). It is the current number of words
+			 * already in hashtab. It is automatically increased
+			 * within the function `add_word()`. */
+			index = word_index;
+			add_word(word);
+		}
+
 		if ((vec[index] = calloc(*n_long, sizeof **vec)) == NULL)
 			continue;
 

@@ -30,10 +30,6 @@ struct neighbor
 	float similarity;
 };
 
-static int n_bits = 0, n_long = 0;      /* #bits per vector, #long per array */
-static long n_words = 0;
-static char **words;
-
 /* binary_sim: return the Sokal-Michener binary similarity (#common / size). */
 float binary_sim(const unsigned long *v1, const unsigned long *v2,
 		 const int n_long)
@@ -48,7 +44,8 @@ float binary_sim(const unsigned long *v1, const unsigned long *v2,
 }
 
 /* find_topk: return the k nearest neighbors of word */
-struct neighbor *find_topk(const char *word, const int k, unsigned long **vec)
+struct neighbor *find_topk(const char *word, const int k, const long n_vecs,
+		           const int n_long,  unsigned long **vec)
 {
 	long i, j, index;
 	struct neighbor *topk, tmp;
@@ -63,15 +60,17 @@ struct neighbor *find_topk(const char *word, const int k, unsigned long **vec)
 	if ((index = get_index(word)) < 0)
 		return NULL;
 
-	for (i = 0; i < n_words; ++i)
+	for (i = 0; i < n_vecs; ++i)
 	{
-		if (i == index)  /* skip word (always its nearest neighbor) */
+		/* a word cannot be its nearest neighbor; skip it */
+		if (i == index)
 			continue;
 
 		/* values in topk are sorted by decreasing similarity. If the
 		 * similarity with current vector is greater than minimal
-		 * similarity in topk, insert current similarity into topk */
-		topk[k].similarity = binary_sim(vec[index], vec[i]);
+		 * similarity in topk, insert current similarity into topk with
+		 * bubble sort */
+		topk[k].similarity = binary_sim(vec[index], vec[i], n_long);
 		if (topk[k].similarity < topk[k-1].similarity)
 			continue;
 
@@ -90,6 +89,8 @@ struct neighbor *find_topk(const char *word, const int k, unsigned long **vec)
 
 int main(int argc, char *argv[])
 {
+	int n_bits, n_long;         /* #bits per vector, #long per array */
+	long n_vecs;                /* #vectors in embedding file */
 	unsigned long **embedding;
 	struct neighbor *topk;
 	int i, k;
@@ -101,14 +102,14 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	embedding = load_binary_vectors(*++argv, NULL, NULL, NULL);
+	embedding = load_binary_vectors(*++argv, &n_vecs, &n_bits, &n_long);
 	k = atoi(*++argv);
 	argc -= 2; /* because already used argument 0 and 1 */
 
 	while (--argc > 0)
 	{
 		start = clock();
-		topk = find_topk(*++argv, k, embedding);
+		topk = find_topk(*++argv, k, n_vecs, n_long, embedding);
 		end = clock();
 
 		if (topk == NULL)
@@ -120,7 +121,7 @@ int main(int argc, char *argv[])
 
 		printf("Top %d closest words of %s\n", k, *argv);
 		for (i = 0; i < k; ++i)
-			printf("  %-15s %.3f\n", words[topk[i].index],
+			printf("  %-15s %.3f\n", "UNK",
 			                         topk[i].similarity);
 		printf("> Query processed in %.3f ms.\n",
 		       (double) (end - start) * 1000 / CLOCKS_PER_SEC);
