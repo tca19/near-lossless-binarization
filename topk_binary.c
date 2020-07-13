@@ -35,14 +35,16 @@ static long n_words = 0;
 static char **words;
 
 /* binary_sim: return the Sokal-Michener binary similarity (#common / size). */
-float binary_sim(const unsigned long *v1, const unsigned long *v2)
+float binary_sim(const unsigned long *v1, const unsigned long *v2,
+		 const int n_long)
 {
 	int n, i;
 
 	/* need the ~ because *v1 ^ *v2 sets the bit to 0 if same bit */
 	for (n = 0, i = 0; i++ < n_long; v1++, v2++)
 		n += __builtin_popcountl(~*v1 ^ *v2);
-	return n / (float) n_bits;
+	return n / (float) (sizeof(long) * 8 * n_long);
+
 }
 
 /* find_topk: return the k nearest neighbors of word */
