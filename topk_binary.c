@@ -19,12 +19,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-#define HASHSIZE   1000000 /* where ? */
+#include <stdio.h>       /* fprintf() */
+#include <stdlib.h>      /* calloc()  */
+#include <time.h>        /* clock()   */
+#include "utils.h"
 
 struct neighbor
 {
@@ -101,7 +99,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	embedding = load_vectors(*++argv);
+	embedding = load_binary_vectors(*++argv, NULL, NULL, NULL);
 	k = atoi(*++argv);
 	argc -= 2; /* because already used argument 0 and 1 */
 
