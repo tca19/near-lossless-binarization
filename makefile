@@ -29,12 +29,14 @@ all: binarize similarity_binary topk_binary
 binarize: binarize.c
 	$(CC) binarize.c -o binarize $(CFLAGS) $(LDLIBS)
 
-# $^ is a shortcut that means 'all the prerequisites'
-similarity_binary: similarity_binary.o hashtab.o spearman.o file_process.o
+# file_process.o requires spearman.o because the function evaluate() (in
+# file_process.c) uses the function spearman_coef() (in spearman.c).  $^ is a
+# shortcut that means 'all the prerequisites'.
+similarity_binary: similarity_binary.o hashtab.o file_process.o spearman.o
 	$(CC) $^ -o similarity_binary $(CFLAGS) $(LDLIBS)
 
-topk_binary: topk_binary.c
-	$(CC) topk_binary.c -o topk_binary $(CFLAGS)
+topk_binary: topk_binary.o hashtab.o file_process.o spearman.o
+	$(CC) $^ -o topk_binary $(CFLAGS)
 
 clean:
 	-rm *.o binarize similarity_binary topk_binary
