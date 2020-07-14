@@ -30,9 +30,9 @@ void lower(char*);
 float spearman_coef(float*, float*, int);
 
 /* file_process.c */
-float binary_sim(const void*, const void*, const int);
 void create_vocab(const char*);
 unsigned long **load_binary_vectors(const char*, long*, int*, int*);
 float         **load_real_vectors(const char*, long *, int*);
 void evaluate(const char*, void**, int,
               float (*f)(const void*, const void*, const int));
+float binary_sim(const void*, const void*, const int);
