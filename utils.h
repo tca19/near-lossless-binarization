@@ -20,7 +20,8 @@
  */
 
 /* hashtab.c */
-extern long word_index;         /* index of vector associated to word */
+extern long n_words;            /* counter of the number of words in hashtab */
+extern char **words;            /* to convert an index to a word */
 unsigned int hash(const char*);
 long get_index(const char*);
 void add_word(const char*);

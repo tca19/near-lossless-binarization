@@ -33,8 +33,21 @@ struct nlist
 	long index;
 };
 
-static struct nlist *hashtab[HASHSIZE]; /* hashtab composed of linked lists */
-long word_index = 0;                    /* index of vector associated to word */
+/* Hash table composed of linked lists. This variable is made static because it
+ * should only be accessed from functions defined in this file. Only the
+ * functions get_index() and add_word() have access to it (either to find the
+ * index of a word or to add a new word into the hash table). */
+static struct nlist *hashtab[HASHSIZE];
+
+/* Counter to know the current number of words in the hash table. Also used as
+ * the index for new words (e.g. if there are 17 words in the hash table, the
+ * new inserted word will have the index 17). Not static because other files
+ * (like file_process.c) might need to know this value. */
+long n_words = 0;
+
+/* Array (used like a Python dictionary) to know a word given its index. Also
+ * not declared as static because used by other files (like topk_binary.c). */
+char **words;
 
 /* hash: form hash value for string s */
 unsigned int hash(const char *s)
@@ -73,8 +86,9 @@ void add_word(const char *s)
 		return;
 
 	strcpy(np->word, s);
+	words[n_words] = np->word;
 	np->next = hashtab[hashval];
-	np->index = word_index++;
+	np->index = n_words++;
 	hashtab[hashval] = np;
 }
 

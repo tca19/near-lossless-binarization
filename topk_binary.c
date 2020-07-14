@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 
 		printf("Top %d closest words of %s\n", k, *argv);
 		for (i = 0; i < k; ++i)
-			printf("  %-15s %.3f\n", "UNK",
+			printf("  %-15s %.3f\n", words[topk[i].index],
 			                         topk[i].similarity);
 		printf("> Query processed in %.3f ms.\n",
 		       (double) (end - start) * 1000 / CLOCKS_PER_SEC);

@@ -96,29 +96,44 @@ unsigned long **load_binary_vectors(const char *name, long *n_vecs,
 		exit(1);
 	}
 
+	/* Only allocate memory to save the pointers to vectors. The memory
+	 * needed to load binary values is done individually for each vector a
+	 * bit further (because in the case of the similarity_binary program,
+	 * only the words from the evaluation datasets are loaded, so no need
+	 * to allocate a lot of memory that we are not going to use). */
 	*n_long = *n_bits / (sizeof(long) * 8);
 	if ((vec = calloc(*n_vecs, sizeof *vec)) == NULL)
 		return NULL;
 
+	/* Allocate memory for the index->word array (declared in hashtab.c).
+	 * It will contain the same number of words as the number of vectors in
+	 * the embedding file. */
+	if ((words = calloc(*n_vecs, sizeof *words)) == NULL)
+		fprintf(stderr, "load_vectors: no memory for index<=>word\n");
+
 	while (fscanf(fp, "%s", word) > 0)
 	{
+		index = get_index(word);
+
 		/* Word vector has already been loaded, skip it. To skip it,
-		 * read all its vector values into the garbage variable `tmp` */
-		if (get_index(word) > 0)
+		 * read all its vector values into the garbage variable `tmp`.*/
+		if (index > 0)
 		{
 			for (i = 0; i < *n_long; ++i)
 				fscanf(fp, "%lu", &tmp);
 		}
 
 		/* Else, its index is -1 (not in the hashtab). Add the word
-		 * into the hashtab, to know that we have loaded its vector */
+		 * into the hashtab, to know that we have loaded its vector,
+		 * and to also add it in the index->word array (done in the
+		 * function `add_word()`). */
 		else
 		{
-			/* its index is set to word_index (variable from
+			/* Its index is set to n_words (variable from
 			 * hashtab.c). It is the current number of words
 			 * already in hashtab. It is automatically increased
 			 * within the function `add_word()`. */
-			index = word_index;
+			index = n_words;
 			add_word(word);
 		}
 
@@ -155,7 +170,7 @@ float **load_real_vectors(const char *name, long *n_vecs, int *n_dims)
 		exit(1);
 	}
 
-	if ((vec = calloc(word_index + 1, sizeof *vec)) == NULL)
+	if ((vec = calloc(*n_vecs, sizeof *vec)) == NULL)
 		return NULL;
 
 	while (fscanf(fp, "%s", word) > 0)
