@@ -29,6 +29,23 @@
 #define MAXLENPATH 256  /* maximum length to access an evaluation dataset */
 #define MAXLENWORD 256  /* maximum length of a word in an embedding file */
 
+/* binary_sim: return the Sokal-Michener binary similarity (#common / #bits) */
+float binary_sim(const void *v1, const void *v2, const int n_long)
+{
+	int n, i;
+	static unsigned long *ar1, *ar2;
+
+	ar1 = (unsigned long *) v1;
+	ar2 = (unsigned long *) v2;
+
+	/* need the ~ because *ar1 ^ *ar2 sets the bit to 0 if same bit */
+	for (n = 0, i = 0; i++ < n_long; ++ar1, ++ar2)
+		n += __builtin_popcountl(~*ar1 ^ *ar2);
+
+	return n / (float) (sizeof(long) * 8 * n_long);
+}
+
+
 /* create_vocab: read each file in dirname to create vocab of unique words */
 void create_vocab(const char *dirname)
 {
