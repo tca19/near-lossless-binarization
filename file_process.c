@@ -77,12 +77,17 @@ void create_vocab(const char *dirname)
 	closedir(dp);
 }
 
-/* load_vectors: read the vector file, only load the vectors of words present in
- *               hashtab (so at most word_index+1 vectors). Save each vector as
- *               an array of `long`, so to represent a vector of 256 bits
- *               it requires an array of 4 `long`. */
-unsigned long **load_binary_vectors(const char *name, long *n_vecs,
-	                            int *n_bits, int *n_long)
+/* load_vectors: read the vector file `name`. If `load_all_vectors` is set
+ *               (i.e. not zero), read all word vectors from the file and
+ *               return the binary embedding matrix (also add each word into
+ *               the hashtab). If `load_all_vectors` is 0, only load the
+ *               vectors of words already in hashtab (hashtab should have been
+ *               populated with create_vocab()). In this case, no words are
+ *               added to hashtab. Each binary word vector is loaded as an
+ *               array of `long`, so to represent a vector of 256 bits it
+ *               requires an array of 4 `long`. */
+unsigned long **load_binary_vectors(const char *name, long *n_vecs, int *n_bits,
+	                     int *n_long, const int load_all_vectors)
 {
 	int i;
 	long index;
@@ -121,31 +126,50 @@ unsigned long **load_binary_vectors(const char *name, long *n_vecs,
 	{
 		index = get_index(word);
 
-		/* Word vector has already been loaded, skip it. To skip it,
-		 * read all its vector values into the garbage variable `tmp`.*/
-		if (index > 0)
+		if (load_all_vectors)
 		{
-			for (i = 0; i < *n_long; ++i)
-				fscanf(fp, "%lu", &tmp);
+			/* Word vector has already been loaded, skip it. To
+			 * skip it, read all its vector values into the garbage
+			 * variable `tmp` then go to next one. */
+			if (index > 0)
+			{
+				for (i = 0; i < *n_long; ++i)
+					fscanf(fp, "%lu", &tmp);
+				continue;
+			}
+
+			/* Else, add it into the hashtab with `add_word()`. The
+			 * word is also added into the index->word array with
+			 * the second parameter set to 1 (done in the function
+			 * `add_word()`). */
+			else
+			{
+				/* When a word is added into the hash table
+				 * with `add_word()`, its index is set to
+				 * n_words (variable from hashtab.c). It is the
+				 * current number of words already in hashtab.
+				 * It is automatically increased within the
+				 * function `add_word()`. This index is then
+				 * used to know which row of the embedding
+				 * matrix should be filled with values from the
+				 * embedding file. */
+				index = n_words;
+				add_word(word, 1);
+			}
+		}
+		else /* Do not load all vectors, only those in hashtab. */
+		{
+			if (index == -1) /* word not in hashtab; skip it */
+			{
+				for (i = 0; i < *n_long; ++i)
+					fscanf(fp, "%lu", &tmp);
+				continue;
+			}
 		}
 
-		/* Else, its index is -1 (not in the hashtab). Add the word
-		 * into the hashtab, to know that we have loaded its vector,
-		 * and to also add it in the index->word array (done in the
-		 * function `add_word()`). */
-		else
-		{
-			/* Its index is set to n_words (variable from
-			 * hashtab.c). It is the current number of words
-			 * already in hashtab. It is automatically increased
-			 * within the function `add_word()`. */
-			index = n_words;
-			add_word(word);
-		}
-
+		/* Allocate memory to read vector values and load them. */
 		if ((vec[index] = calloc(*n_long, sizeof **vec)) == NULL)
 			continue;
-
 		for (i = 0; i < *n_long; ++i)
 			fscanf(fp, "%lu", vec[index]+i);
 	}

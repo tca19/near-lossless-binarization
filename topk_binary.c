@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	embedding = load_binary_vectors(*++argv, &n_vecs, &n_bits, &n_long);
+	embedding = load_binary_vectors(*++argv, &n_vecs, &n_bits, &n_long, 1);
 	k = atoi(*++argv);
 	argc -= 2; /* because already used argument 0 and 1 */
 
