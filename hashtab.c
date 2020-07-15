@@ -22,6 +22,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "utils.h"
 
 #define HASHSIZE   1000000
@@ -47,7 +48,7 @@ long n_words = 0;
 
 /* Array (used like a Python dictionary) to know a word given its index. Also
  * not declared as static because used by other files (like topk_binary.c). */
-char **words;
+char **words = NULL;
 
 /* hash: form hash value for string s */
 unsigned int hash(const char *s)
@@ -71,8 +72,10 @@ long get_index(const char *s)
 	return -1;
 }
 
-/* add_word: add word s to hashtab (only if not present) */
-void add_word(const char *s)
+/* add_word: add word s to hashtab (only if not present). If the flag
+ *           `save_word_index` is on (i.e. not zero), also add the word s into
+ *           the array `words`, which is used to find a word given its index. */
+void add_word(const char *s, const int save_word_index)
 {
 	struct nlist *np;
 	unsigned int hashval = hash(s);
@@ -86,7 +89,21 @@ void add_word(const char *s)
 		return;
 
 	strcpy(np->word, s);
-	words[n_words] = np->word;
+
+	/* only add the word s to the array index->word if the argument flag
+	 * has been set. Need a flag because the array words is not required in
+	 * the similarity_binary program (only in topk_binary to know the
+	 * word associated to a neighbor). */
+	if (save_word_index != 0)
+	{
+		if (words == NULL)
+		{
+			fprintf(stderr, "add_word: no memory for `words`\n");
+			exit(1);
+		}
+		words[n_words] = np->word;
+	}
+
 	np->next = hashtab[hashval];
 	np->index = n_words++;
 	hashtab[hashval] = np;

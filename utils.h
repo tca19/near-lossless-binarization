@@ -23,7 +23,7 @@
 extern long n_words;            /* counter of the number of words in hashtab */
 extern char **words;            /* to convert an index to a word */
 long get_index(const char*);
-void add_word(const char*);
+void add_word(const char*, const int);
 void lower(char*);
 
 /* spearman.c */

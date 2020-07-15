@@ -25,7 +25,7 @@
 #include <string.h> /* strcpy, strcmp, strcat */
 #include "utils.h"
 
-#define MAXLINES   5000 /* maximul number of pairs in an evaluation dataset */
+#define MAXLINES   5000 /* maximum number of pairs in an evaluation dataset */
 #define MAXLENPATH 256  /* maximum length to access an evaluation dataset */
 #define MAXLENWORD 256  /* maximum length of a word in an embedding file */
 
@@ -63,8 +63,14 @@ void create_vocab(const char *dirname)
 		{
 			lower(word1);
 			lower(word2);
-			add_word(word1);
-			add_word(word2);
+
+			/* No need to save the index of each word because we
+			 * only iterate over the datasets to build the vocab,
+			 * i.e. the list of word vectors we have to load from
+			 * the embedding file.  For this reason, the second
+			 * parameter is 0. */
+			add_word(word1, 0);
+			add_word(word2, 0);
 		}
 		fclose(fp);
 	}
