@@ -86,7 +86,7 @@ void create_vocab(const char *dirname)
  *               added to hashtab. Each binary word vector is loaded as an
  *               array of `long`, so to represent a vector of 256 bits it
  *               requires an array of 4 `long`. */
-unsigned long **load_binary_vectors(const char *name, long *n_vecs, int *n_bits,
+unsigned long **load_vectors(const char *name, long *n_vecs, int *n_bits,
 	                     int *n_long, const int load_all_vectors)
 {
 	int i;

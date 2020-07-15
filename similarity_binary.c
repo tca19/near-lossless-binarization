@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 	printf("create_vocab(): %fs\n", (double) (end-start) / CLOCKS_PER_SEC);
 
 	start = clock();
-	embedding = load_binary_vectors(*++argv, &n_vecs, &n_bits, &n_long, 0);
+	embedding = load_vectors(*++argv, &n_vecs, &n_bits, &n_long, 0);
 	end = clock();
 	printf("load_vectors(): %fs\n", (double) (end-start) / CLOCKS_PER_SEC);
 
