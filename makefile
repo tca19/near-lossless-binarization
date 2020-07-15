@@ -33,7 +33,7 @@ binarize: binarize.c
 # file_process.c) uses the function spearman_coef() (in spearman.c).  $^ is a
 # shortcut that means 'all the prerequisites'.
 similarity_binary: similarity_binary.o hashtab.o file_process.o spearman.o
-	$(CC) $^ -o similarity_binary $(CFLAGS) $(LDLIBS)
+	$(CC) $^ -o similarity_binary $(CFLAGS)
 
 topk_binary: topk_binary.o hashtab.o file_process.o spearman.o
 	$(CC) $^ -o topk_binary $(CFLAGS)
