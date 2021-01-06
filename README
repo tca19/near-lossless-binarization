@@ -3,18 +3,18 @@
 
 PREAMBLE
 
-	This work is one of my contributions of my PhD thesis entitled "Improving
-	methods to learn word representations for efficient semantic similarities
-	computations" in which I propose new methods to learn better word
-	embeddings. You can find and read my thesis freely available at:
-	https://github.com/tca19/phd-thesis.
+	This work  is  one  of  my  contributions  of  my  PhD  thesis  entitled
+	"Improving methods to learn word representations for efficient  semantic
+	similarities computations" in which  I  propose  new  methods  to  learn
+	better word embeddings. You can find and read my thesis freely available
+	at https://github.com/tca19/phd-thesis.
 
 ABOUT
 
-	This repository contains source code to binarize any real-value word
-	embeddings into binary vectors. It also contains some scripts to
-	evaluate the performances of the binary vectors on semantic similarity
-	tasks and top-k queries. Related paper can be found at
+	This repository contains source code to  binarize  any  real-value  word
+	embeddings into binary  vectors.   It  also  contains  some  scripts  to
+	evaluate the performances of the binary vectors on  semantic  similarity
+	tasks  and   top-k   queries.    Related   paper   can   be   found   at
 	https://aaai.org/ojs/index.php/AAAI/article/view/4692/4570.
 
 	If you use this repository, please cite:
