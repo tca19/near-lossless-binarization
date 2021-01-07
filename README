@@ -40,7 +40,7 @@ INSTALLATION
 	  - a C compiler (gcc, clang ...)
 	  - make
 
-	Then run the command `make` to build the different binary executables.
+	Then run the command `make` to build the different  binary  executables.
 
 	[1] https://github.com/xianyi/OpenBLAS/wiki/Precompiled-installation-packages
 
@@ -48,31 +48,32 @@ USAGE
 
 	1. Binarize word vectors
 	------------------------
-	Run the executable `binarize` to transform real-value embeddings into
-	binary vectors. The only mandatory command line argument is `-input`,
+	Run the executable `binarize` to transform  real-value  embeddings  into
+	binary vectors.  The only mandatory command line argument  is  `-input`,
 	the filename containing the real-value vectors.
 
 	./binarize -input vectors.vec
 
-	All the other existing flags documentation can be found with
+	All  the  other  existing  flags  documentation  can   be   found   with
 	`./binarize -h` or `./binarize --help`
 
-	The binary vectors are saved by default into the file `binary_vectors.vec`.
-	The first line of this file indicates the number of binary word vectors and
-	the number of bits in each vector. Each following line are formatted like:
+	Binary vectors are saved by default into the file  `binary_vectors.vec`.
+	The first line of this file indicates the number of binary word  vectors
+	and the number of bits in each vector. Each following line are formatted
+	like:
 
 	WORD INTEGER_1 INTEGER_2 [...]
 
-	The binary vectors are not saved as strings of zeros (0) and ones (1) but as
-	groups of unsigned long integers. Each integer represents 64 bits so for a
-	binary vector of 256 bits, there are 4 integers (4 * 64 = 256). The binary
-	vector of a word is the concatenation of the binary representations of all
-	the integers on the rest of its line.
+	Binary vectors are not saved as strings of zeros (0) and ones (1) but as
+	groups of unsigned long integers. Each integer represents 64 bits so for
+	a binary vector of 256 bits, there are 4 integers (4 * 64 =  256).   The
+	binary  vector  of  a  word  is  the   concatenation   of   the   binary
+	representations  of  all  the  integers  on  the  rest  of   its   line.
 
 	2. Evaluate semantic similarity
 	-------------------------------
-	Run the executable `similarity_binary` to evaluate the semantic
-	similarity correlation scores of the produced binary vectors.
+	Run  the  executable  `similarity_binary`  to  evaluate   the   semantic
+	similarity  correlation  scores  of   the   produced   binary   vectors.
 
 	./similarity_binary binary_vectors.vec
 
@@ -82,28 +83,28 @@ USAGE
 	  - SimVerb 3500 (SimVerb)
 	  - SimLex 999 (SimLex)
 	  - WordSim 353 (WS353)
-	To evaluate on other semantic similarity datasets, simply add them into
+	To evaluate on other semantic similarity datasets, simply add them  into
 	the datasets/ folder and run again the `./similarity_binary` executable.
 
 	3. Top-K queries
 	----------------
-	Run the executable `topk_binary` to compute the K closest neighbors
-	words and their respective similarity to a QUERY word.
+	Run the executable `topk_binary` to  compute  the  K  closest  neighbors
+	words   and   their   respective   similarity   to   a    QUERY    word.
 
 	./topk_binary binary_vectors.vec K QUERY
 
-	The script will report the closest words and their similarity, as well
-	as the time needed to compute the K closest neighbors. You can also run
-	multiple top-k queries at the same time, simply replace the QUERY word
+	The script will report the closest words and their similarity,  as  well
+	as the time needed to compute the K closest neighbors.  You can also run
+	multiple top-k queries at the same time, simply replace the  QUERY  word
 	with a list of space separated words, like:
 
 	./topk_binary binary_vectors.vec 10 queen automobile man moon computer
 
 AUTHOR
 
-	Written by Julien Tissier <30314448+tca19@users.noreply.github.com>.
+	Written  by  Julien  Tissier  <30314448+tca19@users.noreply.github.com>.
 
 COPYRIGHT
 
-	This software is licensed under the GNU GPLv3 license. See the LICENSE
+	This software is licensed under the GNU GPLv3 license.  See the  LICENSE
 	file for more details.
